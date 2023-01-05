@@ -1,0 +1,21 @@
+/*
+ * version.h.in - part of Tessalatrix
+ *
+ * This is used by CMake to automagically build version.h; it passes various
+ * CMake variables into the compilation of Tessalatrix.
+ *
+ * Copyright (c) 2023 Pete Favelle <ahnlak@ahnlak.com>
+ *
+ * This file is released under the MIT License; see LICENSE for details.
+ */
+
+#ifndef   TRIX_VERSION_H
+#define   TRIX_VERSION_H
+
+#define   TRIX_VERSION_MAJOR  @PROJECT_VERSION_MAJOR@
+#define   TRIX_VERSION_MINOR  @PROJECT_VERSION_MINOR@
+#define   TRIX_VERSION_PATCH  @PROJECT_VERSION_PATCH@
+
+#endif /* TRIX_VERSION_H */
+
+/* End of file version.h.in */

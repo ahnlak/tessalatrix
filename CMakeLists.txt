@@ -14,7 +14,7 @@ project(tesselatrix
         LANGUAGES C)
 
 # Build the config header
-configure_file(config.h.in config.h)
+configure_file(version.h.in version.h)
 
 # Add in the source code
 add_subdirectory(src)

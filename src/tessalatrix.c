@@ -17,7 +17,7 @@
 
 /* Local headers. */
 
-#include "config.h"
+#include "tessalatrix.h"
 
 
 /* Functions. */
@@ -28,6 +28,13 @@
 
 int main( int argc, char **argv )
 {
+  /* Initialise our configuration. */
+  if ( !config_load( argc, argv ) )
+  {
+    /* False return here just means we want to exit; not really an error. */
+    return 0;
+  }
+
   /* All done, return success to the commandline. */
   return 0;
 }
