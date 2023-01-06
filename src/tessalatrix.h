@@ -13,6 +13,8 @@
 #define   TRIX_TESSALATRIX_H
 
 #include <stdbool.h>
+#include <stdint.h>
+
 
 /* Constants. */
 
@@ -32,17 +34,35 @@ typedef enum
 
 typedef enum
 {
-  CONF_LOG_LEVEL
+  CONF_LOG_LEVEL, CONF_LOG_FILENAME,
+  CONF_MAX
 } trix_confitem_t;
 
 
 /* Structs. */
 
+typedef struct
+{
+  bool  persistent;
+  bool  type_int;
+  bool  type_float;
+  bool  type_string;
+  union {
+    int32_t intnum;
+    double  floatnum;
+    char    string[TRIX_PATH_MAX+1];
+  }     value;
+} trix_config_t;
 
 
 /* Prototypes. */
 
 bool        config_load( int, char ** );
+bool        config_save( void );
+int32_t     config_get_int( trix_confitem_t );
+double      config_get_float( trix_confitem_t );
+const char *config_get_string( trix_confitem_t );
+
 bool        log_init( void );
 bool        log_write( trix_loglevel_t, const char *, ... );
 

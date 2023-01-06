@@ -18,6 +18,7 @@
 /* Local headers. */
 
 #include "tessalatrix.h"
+#include "version.h"
 
 
 /* Functions. */
@@ -35,7 +36,18 @@ int main( int argc, char **argv )
     return 0;
   }
 
+  /* Good; we can now safely initialise the log subsystem. */
+  if ( !log_init() )
+  {
+    /* Not great, but no reason to completely give up. Just log and continue. */
+    fprintf( stderr, "ALERT! Tessalatrix unable to intialise log subsystem.\n" );
+  }
+  log_write( ALWAYS, "Tessalatrix V%d.%d.%03d started.\n", 
+             TRIX_VERSION_MAJOR, TRIX_VERSION_MINOR, TRIX_VERSION_PATCH );
+
   /* All done, return success to the commandline. */
+  log_write( ALWAYS, "Tessalatrix V%d.%d.%03d terminated.\n", 
+             TRIX_VERSION_MAJOR, TRIX_VERSION_MINOR, TRIX_VERSION_PATCH );
   return 0;
 }
 

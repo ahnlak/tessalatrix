@@ -14,6 +14,9 @@ set_target_properties(
   RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
+# Tell CMake the capabilities we need from the compiler (like C version)
+target_compile_features(${APP_NAME} PRIVATE c_std_99)
+
 # Tell CMake where else to look for includes (such as config.h)
 target_include_directories(${APP_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 target_include_directories(${APP_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/vendor/optparse")
