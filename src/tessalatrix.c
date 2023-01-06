@@ -18,7 +18,6 @@
 /* Local headers. */
 
 #include "tessalatrix.h"
-#include "version.h"
 
 
 /* Functions. */
@@ -42,12 +41,26 @@ int main( int argc, char **argv )
     /* Not great, but no reason to completely give up. Just log and continue. */
     fprintf( stderr, "ALERT! Tessalatrix unable to intialise log subsystem.\n" );
   }
-  log_write( ALWAYS, "Tessalatrix V%d.%d.%03d started.\n", 
-             TRIX_VERSION_MAJOR, TRIX_VERSION_MINOR, TRIX_VERSION_PATCH );
+  log_write( ALWAYS, "%s started.", util_app_namever() );
+
+  /* Set up the display. */
+  if ( display_init() )
+  {
+    /* Pass control into the main game loop, until it exists. */
+    /*__RETURN__*/
+    sleep(2);
+
+    /* Lastly, tear down the display. */
+    display_fini();
+  }
+  else /* display_init() failed */
+  {
+    /* Log it and never bother entering the main game loop. */
+    log_write( ERROR, "Failed to initialise display!" );
+  }
 
   /* All done, return success to the commandline. */
-  log_write( ALWAYS, "Tessalatrix V%d.%d.%03d terminated.\n", 
-             TRIX_VERSION_MAJOR, TRIX_VERSION_MINOR, TRIX_VERSION_PATCH );
+  log_write( ALWAYS, "%s terminated.", util_app_namever() );
   return 0;
 }
 

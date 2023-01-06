@@ -87,6 +87,11 @@ bool log_write( trix_loglevel_t p_level, const char * p_message, ... )
   /* Good; simply output the message then, wrangling the varargs stuff. */
   va_start( l_args, p_message );
   vfprintf( m_log_fptr, p_message, l_args );
+  if ( p_message[strlen(p_message)-1] != '\n' )
+  {
+    /* Add a newline if we didn't get passed one. */
+    fputc( '\n', m_log_fptr );
+  }
   va_end( l_args );
 
   /* All fine. */

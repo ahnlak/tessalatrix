@@ -63,8 +63,14 @@ int32_t     config_get_int( trix_confitem_t );
 double      config_get_float( trix_confitem_t );
 const char *config_get_string( trix_confitem_t );
 
+bool        display_init( void );
+void        display_fini( void );
+
 bool        log_init( void );
 bool        log_write( trix_loglevel_t, const char *, ... );
+
+const char *util_app_name( void );
+const char *util_app_namever( void );
 
 
 #endif /* TRIX_TESSALATRIX_H */

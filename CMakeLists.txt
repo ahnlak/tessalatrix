@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.16)
 cmake_policy(SET CMP0048 NEW)
 
 # Declare the project details
-project(tesselatrix 
+project(Tesselatrix 
         VERSION 0.1.1
         DESCRIPTION "A cross platform implementation of Tetris"
         HOMEPAGE_URL "https://github.com/ahnlak/tessalatrix"

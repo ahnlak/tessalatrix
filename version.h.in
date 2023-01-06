@@ -16,6 +16,8 @@
 #define   TRIX_VERSION_MINOR  @PROJECT_VERSION_MINOR@
 #define   TRIX_VERSION_PATCH  @PROJECT_VERSION_PATCH@
 
+#define   TRIX_PROJECT_NAME   "@PROJECT_NAME@"
+
 #endif /* TRIX_VERSION_H */
 
 /* End of file version.h.in */

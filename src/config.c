@@ -20,7 +20,6 @@
 /* Local headers. */
 
 #include "tessalatrix.h"
-#include "version.h"
 
 
 /* Special wrangling to get optparse in the form we desire. */
@@ -141,8 +140,7 @@ bool config_load( int p_argc, char **p_argv )
     {
       /* Display version, and exit. */
       case 'v':
-        printf( "Tessalatrix V%d.%d.%03d\n", 
-                TRIX_VERSION_MAJOR, TRIX_VERSION_MINOR, TRIX_VERSION_PATCH );
+        printf( "%s\n", util_app_namever() );
         l_retval = false;
         break;
       /* Set the desired log level. */
@@ -182,8 +180,7 @@ bool config_load( int p_argc, char **p_argv )
       /* Help, and if we can't figure anything else out. */
       case 'h':
       default:
-        printf( "Tessalatrix V%d.%d.%03d\n", 
-                TRIX_VERSION_MAJOR, TRIX_VERSION_MINOR, TRIX_VERSION_PATCH );
+        printf( "%s\n", util_app_namever() );
         printf( "\nUsage: %s [OPTIONS]\nwhere [OPTIONS] is one or more of:\n\n", p_argv[0] );
         printf( "-v, --version      display version number, and exit\n" );
         printf( "-h, --help         display this help text, and exit\n" );
