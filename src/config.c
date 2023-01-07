@@ -37,7 +37,6 @@ static trix_loglevel_t m_log_level;
 static char            m_log_fname[TRIX_PATH_MAX+1];
 
 
-
 /*
  * Static functions; a collection of things only built for use locally.
  */
@@ -124,6 +123,8 @@ bool config_load( int p_argc, char **p_argv )
   /* First step, set up all our default values. */
   config_set_int( CONF_LOG_LEVEL, ERROR, false );
   config_set_string( CONF_LOG_FILENAME, "tessalatrix.log", false );
+  config_set_int( CONF_WINDOW_WIDTH, 800, true );
+  config_set_int( CONF_WINDOW_HEIGHT, 600, true );
 
   /* Load up any configuration file we can find. */
   /* __RETURN__ */

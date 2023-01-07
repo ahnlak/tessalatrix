@@ -35,6 +35,7 @@ typedef enum
 typedef enum
 {
   CONF_LOG_LEVEL, CONF_LOG_FILENAME,
+  CONF_WINDOW_WIDTH, CONF_WINDOW_HEIGHT,
   CONF_MAX
 } trix_confitem_t;
 

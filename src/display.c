@@ -14,6 +14,7 @@
 /* System headers. */
 
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
@@ -27,7 +28,45 @@
 
 /* Module variables. */
 
+const SDL_Rect      m_resolutions[] = {
+  {.x=0, .y=0, .w= 640, .h= 480},
+  {.x=0, .y=0, .w= 800, .h= 600},
+  {.x=0, .y=0, .w=1024, .h= 768},
+  {.x=0, .y=0, .w=1280, .h= 800},
+  {.x=0, .y=0, .w=1440, .h= 900},
+  {.x=0, .y=0, .w=1680, .h=1050},
+  {.x=0, .y=0, .w=1920, .h=1200}
+};
 static SDL_Window  *m_window;
+
+
+/*
+ * Static functions; a collection of things only built for use locally.
+ */
+
+/*
+ * display_fits_inside - given two rectangles, returns true if rectangle A fits
+ *                       inside rectangle B and false if not.
+ */
+
+static bool display_fits_inside( const SDL_Rect *p_rect_a, const SDL_Rect *p_rect_b )
+{
+  /* Check the top left corner. */
+  if ( ( p_rect_a->x < p_rect_b->x ) || ( p_rect_a->y < p_rect_b->y ) )
+  {
+    return false;
+  }
+
+  /* And the bottom right, taking into account any x/y offset. */
+  if ( ( ( p_rect_a->x + p_rect_a->w ) > ( p_rect_b->x + p_rect_b->w ) ) || 
+       ( ( p_rect_a->y + p_rect_a->h ) > ( p_rect_b->y + p_rect_b->h ) ) )
+  {
+    return false;
+  }
+
+  /* Good, then he fits! */
+  return true;
+}
 
 
 /* Functions. */
@@ -39,7 +78,8 @@ static SDL_Window  *m_window;
 
 bool display_init( void )
 {
-  SDL_Rect  l_display_bounds;
+  int_fast8_t l_index;
+  SDL_Rect    l_display_bounds, l_window_size;
 
   /* First step, ask SDL to wake up. */
   if ( SDL_Init( SDL_INIT_VIDEO ) < 0 )
@@ -47,6 +87,11 @@ bool display_init( void )
     log_write( ERROR, "SDL_Init() failed  - %s", SDL_GetError() );
     return false;
   }
+
+  /* Pull the window size from our configuration. */
+  l_window_size.x = l_window_size.y = 0;
+  l_window_size.w = config_get_int( CONF_WINDOW_WIDTH );
+  l_window_size.h = config_get_int( CONF_WINDOW_HEIGHT );
 
   /* Fetch the desktop bounds; make sure our initial window size makes sense. */
   if ( SDL_GetDisplayBounds( 0, &l_display_bounds ) < 0 )
@@ -56,10 +101,31 @@ bool display_init( void )
     return false;    
   }
 
+  if ( !display_fits_inside( &l_window_size, &l_display_bounds ) )
+  {
+    /* Work through our resolutions until we find one that fits. */
+    for ( l_index = ( sizeof(m_resolutions) / sizeof(SDL_Rect) ) - 1; l_index >=0; l_index-- )
+    {
+      if ( display_fits_inside( &m_resolutions[l_index], &l_display_bounds ) )
+      {
+        memcpy( &l_window_size, &m_resolutions[l_index], sizeof(SDL_Rect) );
+        break;
+      }
+    }
+
+    /* If we didn't find anything viable, then, well, bugger. */
+    if ( l_index < 0 )
+    {
+      log_write( ERROR, "Unable to find any valid resolutions!" );
+      display_fini();
+      return false;
+    }
+  }
+
   /* Now, open up the window we'll use. */
   m_window = SDL_CreateWindow( util_app_name(), 
                                SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
-                               640, 480,
+                               l_window_size.w, l_window_size.h,
                                SDL_WINDOW_SHOWN );
   if ( m_window == NULL )
   {
