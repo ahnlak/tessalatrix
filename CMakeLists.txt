@@ -18,3 +18,9 @@ configure_file(version.h.in version.h)
 
 # Add in the source code
 add_subdirectory(src)
+
+# Pull in CPack to build distribs
+install(DIRECTORY assets DESTINATION .)
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+set(CPACK_GENERATOR "ZIP" "TGZ")
+include(CPack)

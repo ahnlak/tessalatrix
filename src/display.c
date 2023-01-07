@@ -39,11 +39,21 @@ static SDL_Window  *m_window;
 
 bool display_init( void )
 {
+  SDL_Rect  l_display_bounds;
+
   /* First step, ask SDL to wake up. */
   if ( SDL_Init( SDL_INIT_VIDEO ) < 0 )
   {
     log_write( ERROR, "SDL_Init() failed  - %s", SDL_GetError() );
     return false;
+  }
+
+  /* Fetch the desktop bounds; make sure our initial window size makes sense. */
+  if ( SDL_GetDisplayBounds( 0, &l_display_bounds ) < 0 )
+  {
+    log_write( ERROR, "SDL_GetDisplayBounds() failed  - %s", SDL_GetError() );
+    display_fini();
+    return false;    
   }
 
   /* Now, open up the window we'll use. */

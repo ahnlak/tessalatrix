@@ -16,6 +16,7 @@ set_target_properties(
 
 # Tell CMake the capabilities we need from the compiler (like C version)
 target_compile_features(${APP_NAME} PRIVATE c_std_99)
+add_compile_options("-Wall" "-Wextra" "-Wdouble-promotion" "-Wno-unused-parameter")
 
 # Tell CMake where else to look for includes (such as config.h)
 target_include_directories(${APP_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
@@ -25,3 +26,6 @@ target_include_directories(${APP_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/vendor/opt
 find_package(SDL2 REQUIRED)
 target_link_libraries(${APP_NAME} PRIVATE "${SDL2_LIBRARIES}")
 target_include_directories(${APP_NAME} PRIVATE "${SDL2_INCLUDE_DIRS}")
+
+# And set the built app as an install target
+install(TARGETS ${APP_NAME} DESTINATION .)
