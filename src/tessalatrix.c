@@ -28,6 +28,10 @@
 
 int main( int argc, char **argv )
 {
+  bool            l_running = true;
+  SDL_Event       l_event;
+  trix_engine_st  l_current_engine;
+
   /* Initialise our configuration. */
   if ( !config_load( argc, argv ) )
   {
@@ -46,9 +50,32 @@ int main( int argc, char **argv )
   /* Set up the display. */
   if ( display_init() )
   {
-    /* Pass control into the main game loop, until it exists. */
-    /*__RETURN__*/
-    sleep(2);
+    /* Dive into the main logic loop, until it exists. */
+    while( l_running )
+    {
+      /* So, work through any queued up events. */
+      while( SDL_PollEvent( &l_event ) != 0 )
+      {
+        /* Handle the system-level events. */
+        if ( l_event.type == SDL_QUIT )
+        {
+          l_running = false;
+          break;
+        }
+      }
+
+      /* If we've quit, we probably don't need to do any more! */
+      if ( !l_running )
+      {
+        break;
+      }
+
+      /* Ask the current engine to update. */
+
+      /* And then to render itself (if we have time) */
+
+      /* Wait for the next tick, if we need to. */
+    }
 
     /* Lastly, tear down the display. */
     display_fini();

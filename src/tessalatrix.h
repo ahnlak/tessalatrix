@@ -37,7 +37,12 @@ typedef enum
   CONF_LOG_LEVEL, CONF_LOG_FILENAME,
   CONF_WINDOW_WIDTH, CONF_WINDOW_HEIGHT,
   CONF_MAX
-} trix_confitem_t;
+} trix_config_t;
+
+typedef enum
+{
+  ENGINE_SPLASH 
+} trix_engine_t;
 
 
 /* Structs. */
@@ -53,16 +58,21 @@ typedef struct
     double  floatnum;
     char    string[TRIX_PATH_MAX+1];
   }     value;
-} trix_config_t;
+} trix_config_st;
+
+typedef struct {
+    uint_fast8_t (*update)(void);
+    void         (*render)(void);
+} trix_engine_st;
 
 
 /* Prototypes. */
 
 bool        config_load( int, char ** );
 bool        config_save( void );
-int32_t     config_get_int( trix_confitem_t );
-double      config_get_float( trix_confitem_t );
-const char *config_get_string( trix_confitem_t );
+int32_t     config_get_int( trix_config_t );
+double      config_get_float( trix_config_t );
+const char *config_get_string( trix_config_t );
 
 bool        display_init( void );
 void        display_fini( void );

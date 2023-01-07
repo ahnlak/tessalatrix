@@ -31,7 +31,7 @@
 
 /* Module variables. */
 
-static trix_config_t   m_config[CONF_MAX];
+static trix_config_st  m_config[CONF_MAX];
 
 static trix_loglevel_t m_log_level;
 static char            m_log_fname[TRIX_PATH_MAX+1];
@@ -45,10 +45,10 @@ static char            m_log_fname[TRIX_PATH_MAX+1];
  * config_set_* - a set of static convenience functions for filling in the given
  *                configuration item definition.
  */
-static void config_set_int( trix_confitem_t p_item, int32_t p_intnum, bool p_persistent )
+static void config_set_int( trix_config_t p_item, int32_t p_intnum, bool p_persistent )
 {
   /* Make sure the entry is blank. */
-  memset( &m_config[p_item], 0, sizeof( trix_config_t ) );
+  memset( &m_config[p_item], 0, sizeof( trix_config_st ) );
 
   /* Set the persistent flag. */
   m_config[p_item].persistent = p_persistent;
@@ -62,10 +62,10 @@ static void config_set_int( trix_confitem_t p_item, int32_t p_intnum, bool p_per
   /* All done. */
   return;
 }
-static void config_set_float( trix_confitem_t p_item, double p_floatnum, bool p_persistent )
+static void config_set_float( trix_config_t p_item, double p_floatnum, bool p_persistent )
 {
   /* Make sure the entry is blank. */
-  memset( &m_config[p_item], 0, sizeof( trix_config_t ) );
+  memset( &m_config[p_item], 0, sizeof( trix_config_st ) );
 
   /* Set the persistent flag. */
   m_config[p_item].persistent = p_persistent;
@@ -79,10 +79,10 @@ static void config_set_float( trix_confitem_t p_item, double p_floatnum, bool p_
   /* All done. */
   return;
 }
-static void config_set_string( trix_confitem_t p_item, const char *p_string, bool p_persistent )
+static void config_set_string( trix_config_t p_item, const char *p_string, bool p_persistent )
 {
   /* Make sure the entry is blank. */
-  memset( &m_config[p_item], 0, sizeof( trix_config_t ) );
+  memset( &m_config[p_item], 0, sizeof( trix_config_st ) );
 
   /* Set the persistent flag. */
   m_config[p_item].persistent = p_persistent;
@@ -201,7 +201,7 @@ bool config_load( int p_argc, char **p_argv )
  *                not have the correct type set then zero (or null) is returned.
  */
 
-int32_t config_get_int( trix_confitem_t p_item )
+int32_t config_get_int( trix_config_t p_item )
 {
   /* If the type matches, return the value. */
   if ( m_config[p_item].type_int )
@@ -212,7 +212,7 @@ int32_t config_get_int( trix_confitem_t p_item )
   /* Default to zero on failure. */
   return 0;
 }
-double config_get_float( trix_confitem_t p_item )
+double config_get_float( trix_config_t p_item )
 {
   /* If the type matches, return the value. */
   if ( m_config[p_item].type_float )
@@ -223,7 +223,7 @@ double config_get_float( trix_confitem_t p_item )
   /* Default to zero on failure. */
   return 0;
 }
-const char *config_get_string( trix_confitem_t p_item )
+const char *config_get_string( trix_config_t p_item )
 {
   /* If the type matches, return the value. */
   if ( m_config[p_item].type_string )
