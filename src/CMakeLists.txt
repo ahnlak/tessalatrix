@@ -5,7 +5,7 @@ set(APP_NAME tessalatrix)
 # Add the executable, and list all the source that goes into it
 add_executable(
   ${APP_NAME}
-  config.c display.c log.c tessalatrix.c util.c
+  config.c display.c log.c splash.c tessalatrix.c util.c
 )
 
 # Make sure it's built in the top level directory
@@ -22,10 +22,48 @@ add_compile_options("-Wall" "-Wextra" "-Wdouble-promotion" "-Wno-unused-paramete
 target_include_directories(${APP_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 target_include_directories(${APP_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/vendor/optparse")
 
+# Function stolen from the 32Blit SDK, for tracking down escaped SDL libraries.
+function (find_sdl_lib lib_name header_name)
+  string(TOUPPER ${lib_name} VAR_PREFIX)
+
+  # new enough SDL_image/_net have cmake config support
+  find_package(${lib_name} QUIET)
+  if(TARGET ${lib_name}::${lib_name})
+    set(${VAR_PREFIX}_LIBRARY ${lib_name}::${lib_name} PARENT_SCOPE)
+    set(${VAR_PREFIX}_INCLUDE_DIR "" PARENT_SCOPE)
+
+    if(WIN32)
+      get_property(LIB_DLL TARGET ${lib_name}::${lib_name} PROPERTY IMPORTED_LOCATION)
+      set(${VAR_PREFIX}_DLL ${LIB_DLL} PARENT_SCOPE)
+    endif()
+
+    return()
+  endif()
+
+  message("find_package(${lib_name}) failed, trying manual search...")
+
+  find_path(${VAR_PREFIX}_INCLUDE_DIR ${header_name}
+    HINTS ${SDL2_DIR} ${SDL2_DIR}/../../../
+    PATH_SUFFIXES SDL2 include/SDL2 include
+  )
+
+  find_library(${VAR_PREFIX}_LIBRARY
+    NAMES ${lib_name}
+    HINTS ${SDL2_DIR} ${SDL2_DIR}/../../../
+    PATH_SUFFIXES lib
+  )
+
+  if(NOT ${VAR_PREFIX}_INCLUDE_DIR OR NOT ${VAR_PREFIX}_LIBRARY)
+    message(FATAL_ERROR "${lib_name} not found!")
+  endif()
+
+endfunction()
+
 # Add in the SDL requirements
 find_package(SDL2 REQUIRED)
-target_link_libraries(${APP_NAME} PRIVATE "${SDL2_LIBRARIES}")
-target_include_directories(${APP_NAME} PRIVATE "${SDL2_INCLUDE_DIRS}")
+find_sdl_lib(SDL2_image SDL_image.h)
+target_link_libraries(${APP_NAME} PRIVATE "${SDL2_LIBRARIES}" "${SDL2_IMAGE_LIBRARY}")
+target_include_directories(${APP_NAME} PRIVATE "${SDL2_INCLUDE_DIRS}" "${SDL2_IMAGE_INCLUDE_DIR}")
 
 # And set the built app as an install target
 install(TARGETS ${APP_NAME} DESTINATION .)

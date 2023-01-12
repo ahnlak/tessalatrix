@@ -30,6 +30,7 @@ int main( int argc, char **argv )
 {
   bool            l_running = true;
   SDL_Event       l_event;
+  trix_engine_t   l_target_engine;
   trix_engine_st  l_current_engine;
 
   /* Initialise our configuration. */
@@ -46,6 +47,14 @@ int main( int argc, char **argv )
     fprintf( stderr, "ALERT! Tessalatrix unable to intialise log subsystem.\n" );
   }
   log_write( ALWAYS, "%s started.", util_app_namever() );
+
+  /* Set up the initial engine. */
+  l_current_engine.type = ENGINE_SPLASH;
+  l_current_engine.init = splash_init;
+  l_current_engine.update = splash_update;
+  l_current_engine.render = splash_render;
+  l_current_engine.fini = splash_fini;
+  l_current_engine.init();
 
   /* Set up the display. */
   if ( display_init() )
@@ -71,8 +80,29 @@ int main( int argc, char **argv )
       }
 
       /* Ask the current engine to update. */
+      l_target_engine = l_current_engine.update();
+
+      /* If the engine has requested a switch, do so and move straight on. */
+      if ( l_target_engine != l_current_engine.type )
+      {
+        /* Tell the current engine to shut down. */
+        l_current_engine.fini();
+
+        /* Set up the current engine structure to point to the target. */
+        switch( l_target_engine )
+        {
+          case ENGINE_EXIT:       /* We want to exit the game now. */
+          default:
+            l_running = false;
+            break;
+        }
+
+        /* And move straight on with the next loop. */
+        continue;
+      }
 
       /* And then to render itself (if we have time) */
+      l_current_engine.render();
 
       /* Wait for the next tick, if we need to. */
     }

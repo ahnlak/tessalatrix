@@ -20,7 +20,7 @@ configure_file(version.h.in version.h)
 add_subdirectory(src)
 
 # Pull in CPack to build distribs
-install(DIRECTORY assets DESTINATION .)
+install(DIRECTORY assets DESTINATION . FILES_MATCHING PATTERN "*.png")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 set(CPACK_GENERATOR "ZIP" "TGZ")
 include(CPack)

@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include "SDL.h"
+#include "SDL_image.h"
 
 
 /* Local headers. */
@@ -28,7 +29,7 @@
 
 /* Module variables. */
 
-const SDL_Rect      m_resolutions[] = {
+const SDL_Rect        m_resolutions[] = {
   {.x=0, .y=0, .w= 640, .h= 480},
   {.x=0, .y=0, .w= 800, .h= 600},
   {.x=0, .y=0, .w=1024, .h= 768},
@@ -37,7 +38,8 @@ const SDL_Rect      m_resolutions[] = {
   {.x=0, .y=0, .w=1680, .h=1050},
   {.x=0, .y=0, .w=1920, .h=1200}
 };
-static SDL_Window  *m_window;
+static SDL_Window    *m_window;
+static SDL_Renderer  *m_renderer;
 
 
 /*
@@ -88,6 +90,14 @@ bool display_init( void )
     return false;
   }
 
+  /* And SDL_Image, too. */
+  if ( IMG_Init( IMG_INIT_PNG ) == 0 )
+  {
+    log_write( ERROR, "IMG_Init() failed" );
+    display_fini();
+    return false;
+  }
+
   /* Pull the window size from our configuration. */
   l_window_size.x = l_window_size.y = 0;
   l_window_size.w = config_get_int( CONF_WINDOW_WIDTH );
@@ -134,6 +144,15 @@ bool display_init( void )
     return false;
   }
 
+  /* Try to build a renderer for that window. */
+  m_renderer = SDL_CreateRenderer( m_window, -1, 0 );
+  if ( m_renderer == NULL )
+  {
+    /* We can't work without a renderer. */
+    display_fini();
+    return false;
+  }
+
   /* All fine. */
   return true;
 }
@@ -145,6 +164,13 @@ bool display_init( void )
 
 void display_fini( void )
 {
+  /* Destroy the renderer, if we have one. */
+  if ( m_renderer != NULL )
+  {
+    SDL_DestroyRenderer( m_renderer );
+    m_renderer = NULL;
+  }
+
   /* Close the window, if it's open. */
   if ( m_window != NULL )
   {
@@ -152,11 +178,27 @@ void display_fini( void )
     m_window = NULL;
   }
 
+  /* Try to shut down SDL_Image. */
+  IMG_Quit();
+
   /* And shut down the rest of the library. */
   SDL_Quit();
 
   /* As we're shutting down there's no real point in returning failures! */
   return;
+}
+
+
+/*
+ * display_get_renderer - exposes the renderer on which we want to do all our
+ *                        drawing. Slight overhead, vs using a global but I
+ *                        feel marginally less dirty this way.
+ */
+
+SDL_Renderer *display_get_renderer( void )
+{
+  /* Very simple, for now. */
+  return m_renderer;
 }
 
 

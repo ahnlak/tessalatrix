@@ -14,6 +14,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "SDL.h"
 
 
 /* Constants. */
@@ -23,6 +24,10 @@
 #else
 #define   TRIX_PATH_MAX         256
 #endif /* PATH_MAX */
+
+
+/* Asset locations. */
+#define   TRIX_ASSET_SPLASH     "assets/splash.png"
 
 
 /* Enums. */
@@ -41,7 +46,7 @@ typedef enum
 
 typedef enum
 {
-  ENGINE_SPLASH 
+  ENGINE_SPLASH, ENGINE_EXIT
 } trix_engine_t;
 
 
@@ -61,27 +66,36 @@ typedef struct
 } trix_config_st;
 
 typedef struct {
-    uint_fast8_t (*update)(void);
-    void         (*render)(void);
+    trix_engine_t type;
+    void          (*init)(void);
+    trix_engine_t (*update)(void);
+    void          (*render)(void);
+    void          (*fini)(void);
 } trix_engine_st;
 
 
 /* Prototypes. */
 
-bool        config_load( int, char ** );
-bool        config_save( void );
-int32_t     config_get_int( trix_config_t );
-double      config_get_float( trix_config_t );
-const char *config_get_string( trix_config_t );
+bool          config_load( int, char ** );
+bool          config_save( void );
+int32_t       config_get_int( trix_config_t );
+double        config_get_float( trix_config_t );
+const char   *config_get_string( trix_config_t );
 
-bool        display_init( void );
-void        display_fini( void );
+bool          display_init( void );
+void          display_fini( void );
+SDL_Renderer *display_get_renderer( void );
 
-bool        log_init( void );
-bool        log_write( trix_loglevel_t, const char *, ... );
+bool          log_init( void );
+bool          log_write( trix_loglevel_t, const char *, ... );
 
-const char *util_app_name( void );
-const char *util_app_namever( void );
+void          splash_init( void );
+trix_engine_t splash_update( void );
+void          splash_render( void );
+void          splash_fini( void );
+
+const char   *util_app_name( void );
+const char   *util_app_namever( void );
 
 
 #endif /* TRIX_TESSALATRIX_H */
