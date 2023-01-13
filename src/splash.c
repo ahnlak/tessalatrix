@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include "SDL.h"
+#include "SDL_image.h"
 
 
 /* Local headers. */
@@ -23,7 +24,8 @@
 
 /* Module variables. */
 
-static SDL_Texture *m_splash_texture;
+static SDL_Texture   *m_splash_texture;
+static uint_fast32_t  m_start_tick;
 
 
 /* Functions. */
@@ -36,7 +38,27 @@ void splash_init( void )
 {
   /* Load up the splash image (hopefully!) */
   m_splash_texture = IMG_LoadTexture( display_get_renderer(), TRIX_ASSET_SPLASH );
+  if ( m_splash_texture == NULL )
+  {
+    log_write( ERROR, "IMG_LoadTexture of %s failed - %s", TRIX_ASSET_SPLASH, SDL_GetError() );
+  }
 
+  /* Remember what tick we were initialised at. */
+  m_start_tick = SDL_GetTicks();
+
+  /* All done. */
+  return;
+}
+
+
+/*
+ * event - called for every SDL event received; it's up to the engine what
+ *         to do with them, but effects should be queued and handled within
+ *         the update.
+ */
+
+void splash_event( const SDL_Event * p_event )
+{
   /* All done. */
   return;
 }
@@ -49,6 +71,38 @@ void splash_init( void )
 
 trix_engine_t splash_update( void )
 {
+  static uint_fast8_t l_alpha = 0;
+  const uint_fast16_t l_speed = 1000;
+
+  /* Work out how much time has passed... */
+  const uint_fast32_t l_ticks_passed = SDL_GetTicks() - m_start_tick;
+
+  /* We fade up / down at a pace determined by l_speed. */
+  if ( l_ticks_passed < l_speed )
+  {
+    /* In the first phase, we fade up the alpha. */
+    l_alpha = ( l_ticks_passed * 255 ) / l_speed;
+
+  }
+  else if ( l_ticks_passed < ( l_speed * 2 ) )
+  {
+    /* In the second phase, just hold the splash. */
+    l_alpha = 255;
+  }
+  else if ( l_ticks_passed < ( l_speed * 3 ) )
+  {
+    /* In the third phase, we fade it back down again. */
+    l_alpha = 255 - ( ( l_ticks_passed-l_speed-l_speed ) * 255 ) / l_speed;
+  }
+  else
+  {
+    /* And the end of it, we jump to the next engine. */
+    return ENGINE_EXIT;
+  }
+
+  /* Set the alpha on the splash image to an appropriate value. */
+  SDL_SetTextureAlphaMod( m_splash_texture, l_alpha );
+
   /* By default, ask to stay in our current engine. */
   return ENGINE_SPLASH;
 }
@@ -61,6 +115,18 @@ trix_engine_t splash_update( void )
 
 void splash_render( void )
 {
+  /* For now, just clear down the screen, and draw the splash texture. */
+
+  /* Clear to black. */
+  SDL_SetRenderDrawColor( display_get_renderer(), 0, 0, 0, 255 );
+  SDL_RenderClear( display_get_renderer() );
+
+  /* Render the splash image. */
+  SDL_RenderCopy( display_get_renderer(), m_splash_texture, NULL, NULL );
+
+  /* Last thing to do, ask the renderer to present to the window. */
+  SDL_RenderPresent( display_get_renderer() );
+
   /* All done. */
   return;
 }

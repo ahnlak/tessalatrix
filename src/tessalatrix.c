@@ -51,14 +51,17 @@ int main( int argc, char **argv )
   /* Set up the initial engine. */
   l_current_engine.type = ENGINE_SPLASH;
   l_current_engine.init = splash_init;
+  l_current_engine.event = splash_event;
   l_current_engine.update = splash_update;
   l_current_engine.render = splash_render;
   l_current_engine.fini = splash_fini;
-  l_current_engine.init();
 
   /* Set up the display. */
   if ( display_init() )
   {
+    /* Initialise the starting engine (display needs to be initialised first) */
+    l_current_engine.init();
+
     /* Dive into the main logic loop, until it exists. */
     while( l_running )
     {
@@ -71,6 +74,9 @@ int main( int argc, char **argv )
           l_running = false;
           break;
         }
+
+        /* And pass any remaining events into the current engine. */
+        l_current_engine.event( &l_event );
       }
 
       /* If we've quit, we probably don't need to do any more! */

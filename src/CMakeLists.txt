@@ -22,6 +22,13 @@ add_compile_options("-Wall" "-Wextra" "-Wdouble-promotion" "-Wno-unused-paramete
 target_include_directories(${APP_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 target_include_directories(${APP_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/vendor/optparse")
 
+# Copy the assets too, into the build directory
+add_custom_target(
+  copy_assets
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/assets" "${PROJECT_BINARY_DIR}/assets"
+)
+add_dependencies(${APP_NAME} copy_assets)
+
 # Function stolen from the 32Blit SDK, for tracking down escaped SDL libraries.
 function (find_sdl_lib lib_name header_name)
   string(TOUPPER ${lib_name} VAR_PREFIX)

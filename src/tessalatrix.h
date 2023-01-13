@@ -27,7 +27,7 @@
 
 
 /* Asset locations. */
-#define   TRIX_ASSET_SPLASH     "assets/splash.png"
+#define   TRIX_ASSET_SPLASH     "assets/logo-ahnlak-larger.png"
 
 
 /* Enums. */
@@ -68,6 +68,7 @@ typedef struct
 typedef struct {
     trix_engine_t type;
     void          (*init)(void);
+    void          (*event)(const SDL_Event *);
     trix_engine_t (*update)(void);
     void          (*render)(void);
     void          (*fini)(void);
@@ -90,6 +91,7 @@ bool          log_init( void );
 bool          log_write( trix_loglevel_t, const char *, ... );
 
 void          splash_init( void );
+void          splash_event(const SDL_Event *);
 trix_engine_t splash_update( void );
 void          splash_render( void );
 void          splash_fini( void );
