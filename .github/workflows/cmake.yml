@@ -51,7 +51,7 @@ jobs:
     # Setup Emscripten, if required
     - name: Setup Emscripten
       if:   matrix.name == 'Emscripten'
-      uses: mymindstorm/setup-emsdk@12
+      uses: mymindstorm/setup-emsdk@v12
       with:
         version: ${{env.EM_VERSION}}
         actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
