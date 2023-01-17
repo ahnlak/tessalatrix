@@ -7,8 +7,8 @@
 name: CMake
 
 # Build whenever we push; package on release
-on:
-  push
+on: 
+  push:
   release:
     types: [published]
 
