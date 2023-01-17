@@ -60,5 +60,5 @@ jobs:
       if:   github.event_name == 'release'
       with:
         files: |
-          *.zip 
-          *.tar.gz
+          ${{github.workspace}}/build/*.zip 
+          ${{github.workspace}}/build/*.tar.gz
