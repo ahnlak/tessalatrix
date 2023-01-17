@@ -2,8 +2,8 @@
  * display.c - part of Tessalatrix
  *
  * Display-oriented functions; mostly just wrapping up SDL stuff for 
- * convenience. We'll also keep any platform-specific fiddling (I'm looking
- * at you, Empscripten!) here in one place so the game logic doesn't have to
+ * convenience. We'll also try to keep any platform-specific fiddling (although
+ * sadly not Empscripten!) here in one place so the game logic doesn't have to
  * think about anything.
  *
  * Copyright (c) 2023 Pete Favelle <ahnlak@ahnlak.com>

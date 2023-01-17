@@ -23,13 +23,6 @@
 #include "tessalatrix.h"
 
 
-/* Module variables. */
-
-static trix_engine_st  m_current_engine;
-static bool            m_running = true;
-
-
-
 /* Functions. */
 
 /*
@@ -38,10 +31,11 @@ static bool            m_running = true;
  *             platforms too.
  */
 
-void main_loop( void )
+void main_loop( void *p_arg )
 {
   SDL_Event       l_event;
   trix_engine_t   l_target_engine;
+  trix_engine_st *l_current_engine = p_arg;
 
   /* So, work through any queued up events. */
   while( SDL_PollEvent( &l_event ) != 0 )
@@ -49,35 +43,35 @@ void main_loop( void )
     /* Handle the system-level events. */
     if ( l_event.type == SDL_QUIT )
     {
-      m_running = false;
+      l_current_engine->running = false;
       break;
     }
 
     /* And pass any remaining events into the current engine. */
-    m_current_engine.event( &l_event );
+    l_current_engine->event( &l_event );
   }
 
   /* If we've quit, we probably don't need to do any more! */
-  if ( !m_running )
+  if ( !l_current_engine->running )
   {
     return;
   }
 
   /* Ask the current engine to update. */
-  l_target_engine = m_current_engine.update();
+  l_target_engine = l_current_engine->update();
 
   /* If the engine has requested a switch, do so and move straight on. */
-  if ( l_target_engine != m_current_engine.type )
+  if ( l_target_engine != l_current_engine->type )
   {
     /* Tell the current engine to shut down. */
-    m_current_engine.fini();
+    l_current_engine->fini();
 
     /* Set up the current engine structure to point to the target. */
     switch( l_target_engine )
     {
       case ENGINE_EXIT:       /* We want to exit the game now. */
       default:
-        m_running = false;
+        l_current_engine->running = false;
         break;
     }
 
@@ -86,7 +80,7 @@ void main_loop( void )
   }
 
   /* And then to render itself (if we have time) */
-  m_current_engine.render();
+  l_current_engine->render();
 
   /* Wait for the next tick, if we need to. */
 
@@ -101,6 +95,8 @@ void main_loop( void )
 
 int main( int argc, char **argv )
 {
+  static trix_engine_st  l_current_engine;
+
   /* Initialise our configuration. */
   if ( !config_load( argc, argv ) )
   {
@@ -116,27 +112,28 @@ int main( int argc, char **argv )
   }
   log_write( ALWAYS, "%s started.", util_app_namever() );
 
-  /* Set up the initial engine. */
-  m_current_engine.type = ENGINE_SPLASH;
-  m_current_engine.init = splash_init;
-  m_current_engine.event = splash_event;
-  m_current_engine.update = splash_update;
-  m_current_engine.render = splash_render;
-  m_current_engine.fini = splash_fini;
+  /* Set up the initial engine status. */
+  l_current_engine.type = ENGINE_SPLASH;
+  l_current_engine.running = true;
+  l_current_engine.init = splash_init;
+  l_current_engine.event = splash_event;
+  l_current_engine.update = splash_update;
+  l_current_engine.render = splash_render;
+  l_current_engine.fini = splash_fini;
 
   /* Set up the display. */
   if ( display_init() )
   {
     /* Initialise the starting engine (display needs to be initialised first) */
-    m_current_engine.init();
+    l_current_engine.init();
 
     /* Dive into the main logic loop, until it exists. */
 #ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop( main_loop, 0, 1 );
+    emscripten_set_main_loop_arg( main_loop, &l_current_engine, 0, 1 );
 #else
-    while( m_running )
+    while( l_current_engine.running )
     {
-      main_loop();
+      main_loop( &l_current_engine );
     }
 #endif
 

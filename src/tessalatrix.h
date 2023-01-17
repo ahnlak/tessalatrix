@@ -67,6 +67,7 @@ typedef struct
 
 typedef struct {
     trix_engine_t type;
+    bool          running;
     void          (*init)(void);
     void          (*event)(const SDL_Event *);
     trix_engine_t (*update)(void);
