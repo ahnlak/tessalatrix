@@ -26,6 +26,7 @@
 
 static SDL_Texture   *m_splash_texture;
 static uint_fast32_t  m_start_tick;
+static bool           m_abort = false;
 
 
 /* Functions. */
@@ -46,6 +47,9 @@ void splash_init( void )
   /* Remember what tick we were initialised at. */
   m_start_tick = SDL_GetTicks();
 
+  /* Make sure the abort flag isn't set. */
+  m_abort = false;
+
   /* All done. */
   return;
 }
@@ -57,8 +61,14 @@ void splash_init( void )
  *         the update.
  */
 
-void splash_event( const SDL_Event * p_event )
+void splash_event( const SDL_Event *p_event )
 {
+  /* Pressing any key is enough to skip the boring splash. */
+  if ( p_event->type == SDL_KEYDOWN )
+  {
+    m_abort = true;
+  }
+
   /* All done. */
   return;
 }
@@ -73,6 +83,12 @@ trix_engine_t splash_update( void )
 {
   static uint_fast8_t l_alpha = 0;
   const uint_fast16_t l_speed = 1000;
+
+  /* Before anything, if we want to abort, do so. */
+  if ( m_abort )
+  {
+    return ENGINE_MENU;
+  }
 
   /* Work out how much time has passed... */
   const uint_fast32_t l_ticks_passed = SDL_GetTicks() - m_start_tick;
@@ -97,7 +113,7 @@ trix_engine_t splash_update( void )
   else
   {
     /* And the end of it, we jump to the next engine. */
-    return ENGINE_EXIT;
+    return ENGINE_MENU;
   }
 
   /* Set the alpha on the splash image to an appropriate value. */

@@ -18,6 +18,7 @@
 #include <emscripten/emscripten.h>
 #endif
 
+
 /* Local headers. */
 
 #include "tessalatrix.h"
@@ -69,11 +70,23 @@ void main_loop( void *p_arg )
     /* Set up the current engine structure to point to the target. */
     switch( l_target_engine )
     {
+      case ENGINE_MENU:       /* Render the main menu to the user. */
+        l_current_engine->type = ENGINE_MENU;
+        l_current_engine->init = menu_init;
+        l_current_engine->event = menu_event;
+        l_current_engine->update = menu_update;
+        l_current_engine->render = menu_render;
+        l_current_engine->fini = menu_fini;
+        break;
+
       case ENGINE_EXIT:       /* We want to exit the game now. */
       default:
         l_current_engine->running = false;
-        break;
+        return;
     }
+
+    /* Run any initialisation for the new engine. */
+    l_current_engine->init();
 
     /* And move straight on with the next loop. */
     return;

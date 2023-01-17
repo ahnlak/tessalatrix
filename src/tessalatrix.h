@@ -46,7 +46,7 @@ typedef enum
 
 typedef enum
 {
-  ENGINE_SPLASH, ENGINE_EXIT
+  ENGINE_SPLASH, ENGINE_MENU, ENGINE_EXIT
 } trix_engine_t;
 
 
@@ -90,6 +90,13 @@ SDL_Renderer *display_get_renderer( void );
 
 bool          log_init( void );
 bool          log_write( trix_loglevel_t, const char *, ... );
+
+void          menu_init( void );
+void          menu_event(const SDL_Event *);
+trix_engine_t menu_update( void );
+void          menu_render( void );
+void          menu_fini( void );
+
 
 void          splash_init( void );
 void          splash_event(const SDL_Event *);
