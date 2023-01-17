@@ -67,10 +67,38 @@ function (find_sdl_lib lib_name header_name)
 endfunction()
 
 # Add in the SDL requirements
-find_package(SDL2 REQUIRED)
-find_sdl_lib(SDL2_image SDL_image.h)
+if(EMSCRIPTEN)
+
+  target_compile_options(${APP_NAME} PRIVATE -sUSE_SDL=2 -sUSE_SDL_IMAGE=2)
+  set(SDL2_LIBRARIES "-sUSE_SDL=2")
+  set(SDL2_IMAGE_LIBRARY "-sUSE_SDL_IMAGE=2")
+
+  set_target_properties(${APP_NAME} PROPERTIES
+    SUFFIX ".html"
+    LINK_FLAGS "-s ENVIRONMENT=web -s SDL2_IMAGE_FORMATS=['png'] --preload-file ${PROJECT_BINARY_DIR}/assets@/assets"
+  )
+  target_link_libraries(${APP_NAME} PRIVATE "-lidbfs.js") # include the persistent IndexedDB-based filesystem
+
+else()
+
+  find_package(SDL2 REQUIRED)
+  find_sdl_lib(SDL2_image SDL_image.h)
+  target_include_directories(${APP_NAME} PRIVATE "${SDL2_INCLUDE_DIRS}" "${SDL2_IMAGE_INCLUDE_DIR}")
+
+endif()
+
 target_link_libraries(${APP_NAME} PRIVATE "${SDL2_LIBRARIES}" "${SDL2_IMAGE_LIBRARY}")
-target_include_directories(${APP_NAME} PRIVATE "${SDL2_INCLUDE_DIRS}" "${SDL2_IMAGE_INCLUDE_DIR}")
 
 # And set the built app as an install target
+if(EMSCRIPTEN)
+  install(FILES 
+    ${PROJECT_BINARY_DIR}/${APP_NAME}.data
+    ${PROJECT_BINARY_DIR}/${APP_NAME}.js 
+    ${PROJECT_BINARY_DIR}/${APP_NAME}.wasm
+    DESTINATION .
+  )
+else()
+  install(DIRECTORY "${PROJECT_BINARY_DIR}/assets" DESTINATION . FILES_MATCHING PATTERN "*.png")
+endif()
+
 install(TARGETS ${APP_NAME} DESTINATION .)
