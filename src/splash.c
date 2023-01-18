@@ -27,6 +27,7 @@
 static SDL_Texture   *m_splash_texture;
 static uint_fast32_t  m_start_tick;
 static bool           m_abort = false;
+static SDL_Rect       m_target_rect;
 
 
 /* Functions. */
@@ -37,12 +38,21 @@ static bool           m_abort = false;
 
 void splash_init( void )
 {
+  char          l_splash_filename[TRIX_PATH_MAX+1];
+  uint_fast8_t  l_scale;
+
   /* Load up the splash image (hopefully!) */
-  m_splash_texture = IMG_LoadTexture( display_get_renderer(), TRIX_ASSET_SPLASH );
+  l_scale = display_find_asset( TRIX_ASSET_SPLASH, l_splash_filename );
+  m_splash_texture = IMG_LoadTexture( display_get_renderer(), l_splash_filename );
   if ( m_splash_texture == NULL )
   {
     log_write( ERROR, "IMG_LoadTexture of %s failed - %s", TRIX_ASSET_SPLASH, SDL_GetError() );
   }
+
+  /* Work out the appropriately scaled target rectangle for this. */
+  memcpy( &m_target_rect, 
+          display_scale_rect_to_screen( 0, 0, 160, 110 ),
+          sizeof( SDL_Rect ) );
 
   /* Remember what tick we were initialised at. */
   m_start_tick = SDL_GetTicks();
@@ -137,8 +147,8 @@ void splash_render( void )
   SDL_SetRenderDrawColor( display_get_renderer(), 0, 0, 0, 255 );
   SDL_RenderClear( display_get_renderer() );
 
-  /* Render the splash image. */
-  SDL_RenderCopy( display_get_renderer(), m_splash_texture, NULL, NULL );
+  /* Render the splash image, stretched if we need to. */
+  SDL_RenderCopy( display_get_renderer(), m_splash_texture, NULL, &m_target_rect );
 
   /* Last thing to do, ask the renderer to present to the window. */
   SDL_RenderPresent( display_get_renderer() );

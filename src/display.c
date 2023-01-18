@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
+#include <unistd.h>
 #include "SDL.h"
 #include "SDL_image.h"
 
@@ -29,15 +30,16 @@
 
 /* Module variables. */
 
-const SDL_Rect        m_resolutions[] = {
-  {.x=0, .y=0, .w= 640, .h= 480},
-  {.x=0, .y=0, .w= 800, .h= 600},
-  {.x=0, .y=0, .w=1024, .h= 768},
-  {.x=0, .y=0, .w=1280, .h= 800},
-  {.x=0, .y=0, .w=1440, .h= 900},
-  {.x=0, .y=0, .w=1680, .h=1050},
-  {.x=0, .y=0, .w=1920, .h=1200}
+const trix_resolution_st m_resolutions[] = {
+  {.x=  0, .y=20, .w= 640, .h= 480, .scale=4},
+  {.x=  0, .y=25, .w= 800, .h= 600, .scale=5},
+  {.x= 32, .y=54, .w=1024, .h= 768, .scale=6},
+  {.x= 80, .y=15, .w=1280, .h= 800, .scale=7},
+  {.x= 80, .y=10, .w=1440, .h= 900, .scale=8},
+  {.x=120, .y=30, .w=1680, .h=1050, .scale=9},
+  {.x=160, .y=50, .w=1920, .h=1200, .scale=10}
 };
+static int            m_current_resolution;
 static SDL_Window    *m_window;
 static SDL_Renderer  *m_renderer;
 
@@ -81,7 +83,7 @@ static bool display_fits_inside( const SDL_Rect *p_rect_a, const SDL_Rect *p_rec
 bool display_init( void )
 {
   int_fast8_t l_index;
-  SDL_Rect    l_display_bounds, l_window_size;
+  SDL_Rect    l_display_bounds;
 
   /* First step, ask SDL to wake up. */
   if ( SDL_Init( SDL_INIT_VIDEO ) < 0 )
@@ -99,9 +101,7 @@ bool display_init( void )
   }
 
   /* Pull the window size from our configuration. */
-  l_window_size.x = l_window_size.y = 0;
-  l_window_size.w = config_get_int( CONF_WINDOW_WIDTH );
-  l_window_size.h = config_get_int( CONF_WINDOW_HEIGHT );
+  m_current_resolution = config_get_int( CONF_RESOLUTION );
 
   /* Fetch the desktop bounds; make sure our initial window size makes sense. */
   if ( SDL_GetDisplayBounds( 0, &l_display_bounds ) < 0 )
@@ -111,14 +111,16 @@ bool display_init( void )
     return false;    
   }
 
-  if ( !display_fits_inside( &l_window_size, &l_display_bounds ) )
+  if ( ( m_resolutions[m_current_resolution].w > l_display_bounds.w ) ||
+       ( m_resolutions[m_current_resolution].h > l_display_bounds.h ) )
   {
     /* Work through our resolutions until we find one that fits. */
-    for ( l_index = ( sizeof(m_resolutions) / sizeof(SDL_Rect) ) - 1; l_index >=0; l_index-- )
+    for ( l_index = ( sizeof(m_resolutions) / sizeof(trix_resolution_st) ) - 1; l_index >= 0; l_index-- )
     {
-      if ( display_fits_inside( &m_resolutions[l_index], &l_display_bounds ) )
+      if ( ( m_resolutions[l_index].w <= l_display_bounds.w ) &&
+           ( m_resolutions[l_index].h <= l_display_bounds.h ) )
       {
-        memcpy( &l_window_size, &m_resolutions[l_index], sizeof(SDL_Rect) );
+        m_current_resolution = l_index;
         break;
       }
     }
@@ -134,8 +136,9 @@ bool display_init( void )
 
   /* Now, open up the window we'll use. */
   m_window = SDL_CreateWindow( util_app_name(), 
-                               SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
-                               l_window_size.w, l_window_size.h,
+                               SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                               m_resolutions[m_current_resolution].w,
+                               m_resolutions[m_current_resolution].h,
                                SDL_WINDOW_SHOWN );
   if ( m_window == NULL )
   {
@@ -201,5 +204,129 @@ SDL_Renderer *display_get_renderer( void )
   return m_renderer;
 }
 
+
+/*
+ * display_scale_point - given a logical x, y co-ordinate, return an SDL_Point
+ *                       that is scaled to the current screen resolution.
+ *                       Note that this Point is a static, so should be copied
+ *                       for long-term use.
+ */
+
+SDL_Point *display_scale_point( uint_fast8_t p_x, uint_fast8_t p_y )
+{
+  static SDL_Point l_point;
+
+  /* Apply the scaling factor for the current display, plus offset if required */
+  l_point.x = p_x * m_resolutions[m_current_resolution].scale + m_resolutions[m_current_resolution].x;
+  l_point.y = p_y * m_resolutions[m_current_resolution].scale + m_resolutions[m_current_resolution].y;
+
+
+  /* And return a pointer to our static structure. */
+  return &l_point;
+}
+
+
+/*
+ * display_scale_rect_to_screen - given a logical x, y co-ordinates and width, return an
+ *                      SDL_Rect that is scaled to the current screen resolution.
+ *                      Note that this Rect is a static, so should be copied
+ *                      for long-term use.
+ */
+
+SDL_Rect *display_scale_rect_to_screen( uint_fast8_t p_x, uint_fast8_t p_y, 
+                                        uint_fast8_t p_w, uint_fast8_t p_h )
+{
+  static SDL_Rect l_rect;
+
+  /* Apply the scaling factor for the current display, plus offset if required */
+  l_rect.x = p_x * m_resolutions[m_current_resolution].scale + m_resolutions[m_current_resolution].x;
+  l_rect.y = p_y * m_resolutions[m_current_resolution].scale + m_resolutions[m_current_resolution].y;
+
+  /* Scaling only for the width and height, no offsets. */
+  l_rect.w = p_w * m_resolutions[m_current_resolution].scale;
+  l_rect.h = p_h * m_resolutions[m_current_resolution].scale;
+
+  /* And return a pointer to our static structure. */
+  return &l_rect;  
+}
+
+
+/*
+ * display_scale_rect_to_scale - does a similar job to _to_screen, but to a user
+ *                               provided scale; useful for indexing different
+ *                               scale spritesheets depending on resolution.
+ */
+
+SDL_Rect *display_scale_rect_to_scale( uint_fast8_t p_x, uint_fast8_t p_y, 
+                                       uint_fast8_t p_w, uint_fast8_t p_h, uint_fast8_t p_scale )
+{
+  static SDL_Rect l_rect;
+
+  /* Apply the scaling factor for the required scale. */
+  l_rect.x = p_x * p_scale;
+  l_rect.y = p_y * p_scale;
+
+  /* Scaling only for the width and height, no offsets. */
+  l_rect.w = p_w * p_scale;
+  l_rect.h = p_h * p_scale;
+
+  /* And return a pointer to our static structure. */
+  return &l_rect;  
+}
+
+
+/* 
+ * display_find_asset - given a bare asset name, determines the appropriate
+ *                      PNG file to load for the current resolution - falling
+ *                      back to the next highest resolutions as required.
+ *                      Filenames are <asset-name>-<scale-factor>.png
+ *                      This function returns the scale factor used, or 0 if
+ *                      no suitable file could be identified.
+ */
+
+uint_fast8_t display_find_asset( const char *p_asset_name, char *p_file_buffer )
+{
+  int_fast8_t   l_index;
+  uint_fast8_t  l_scale;
+  char          l_asset_prefix[TRIX_PATH_MAX+1];
+
+  /* All assets are in the asset path - work out the prefix. */
+  snprintf( l_asset_prefix, sizeof( l_asset_prefix ), "%.100s/%.100s",
+            TRIX_ASSET_PATH, p_asset_name );
+
+  /* And now, work through scales, starting with the present resolution. */
+  for ( l_index = m_current_resolution; l_index >= 0; l_index-- )
+  {
+    /* Form up the full asset name. */
+    snprintf( p_file_buffer, TRIX_PATH_MAX, "%.200s-%d.png",
+              l_asset_prefix, m_resolutions[l_index].scale );
+
+    /* If it's readable, we have a hit. */
+    if ( access( p_file_buffer, R_OK ) == 0 )
+    {
+      l_scale = m_resolutions[l_index].scale;
+      break;
+    }
+  }
+
+  /* If we got no match, last effort is the naked asset - fail to blank. */
+  if ( l_index < 0 )
+  {
+    snprintf( p_file_buffer, TRIX_PATH_MAX, "%.200s.png", l_asset_prefix );
+    if ( access( p_file_buffer, R_OK ) == 0 )
+    {
+      /* Naked assets are assumed to be the lowest resolution. */
+      l_scale = m_resolutions[0].scale;
+    }
+    else
+    {
+      p_file_buffer[0] = '\0';
+      l_scale = 0;
+    }
+  }
+
+  /* And return the scale factor. */
+  return l_scale;
+}
 
 /* End of file display.c */

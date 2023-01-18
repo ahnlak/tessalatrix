@@ -20,14 +20,16 @@
 /* Constants. */
 
 #ifdef    PATH_MAX
-#define   TRIX_PATH_MAX         PATH_MAX
+#define   TRIX_PATH_MAX           PATH_MAX
 #else
-#define   TRIX_PATH_MAX         256
+#define   TRIX_PATH_MAX           256
 #endif /* PATH_MAX */
 
 
 /* Asset locations. */
-#define   TRIX_ASSET_SPLASH     "assets/logo-ahnlak-larger.png"
+#define   TRIX_ASSET_PATH         "assets"
+#define   TRIX_ASSET_SPLASH       "logo-ahnlak-larger"
+#define   TRIX_ASSET_MENU_SPRITES "menu-sprites"
 
 
 /* Enums. */
@@ -40,7 +42,7 @@ typedef enum
 typedef enum
 {
   CONF_LOG_LEVEL, CONF_LOG_FILENAME,
-  CONF_WINDOW_WIDTH, CONF_WINDOW_HEIGHT,
+  CONF_RESOLUTION,
   CONF_MAX
 } trix_config_t;
 
@@ -66,14 +68,22 @@ typedef struct
 } trix_config_st;
 
 typedef struct {
-    trix_engine_t type;
-    bool          running;
-    void          (*init)(void);
-    void          (*event)(const SDL_Event *);
-    trix_engine_t (*update)(void);
-    void          (*render)(void);
-    void          (*fini)(void);
+  trix_engine_t type;
+  bool          running;
+  void          (*init)(void);
+  void          (*event)(const SDL_Event *);
+  trix_engine_t (*update)(void);
+  void          (*render)(void);
+  void          (*fini)(void);
 } trix_engine_st;
+
+typedef struct {
+  int_fast16_t  x;
+  int_fast16_t  y;
+  int_fast16_t  w;
+  int_fast16_t  h;
+  uint_fast8_t  scale;
+} trix_resolution_st;
 
 
 /* Prototypes. */
@@ -87,6 +97,10 @@ const char   *config_get_string( trix_config_t );
 bool          display_init( void );
 void          display_fini( void );
 SDL_Renderer *display_get_renderer( void );
+SDL_Point    *display_scale_point( uint_fast8_t, uint_fast8_t );
+SDL_Rect     *display_scale_rect_to_screen( uint_fast8_t, uint_fast8_t, uint_fast8_t, uint_fast8_t );
+SDL_Rect     *display_scale_rect_to_scale( uint_fast8_t, uint_fast8_t, uint_fast8_t, uint_fast8_t, uint_fast8_t );
+uint_fast8_t  display_find_asset( const char *, char * );
 
 bool          log_init( void );
 bool          log_write( trix_loglevel_t, const char *, ... );
