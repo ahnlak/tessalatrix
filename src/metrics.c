@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "SDL.h"
+#include "SDL_image.h"
 
 
 /* Local headers. */
@@ -24,12 +25,64 @@
 
 /* Module variables. */
 
-static time_t       m_current_second;
-static uint_fast8_t m_current_frames;
-static uint_fast8_t m_last_fps;
+static time_t         m_current_second;
+static uint_fast8_t   m_current_frames;
+static uint_fast8_t   m_last_fps;
+static SDL_Texture   *m_sprite_texture = NULL;
+static SDL_Rect       m_fps_frame_src_rect;
+static SDL_Rect       m_fps_frame_target_rect;
 
 
 /* Functions. */
+
+/*
+ * enable - turn on metric gathering; we'll load up a suitable spritesheet
+ *          to allow us to render the FPS, and start counting. 
+ */
+
+void metrics_enable( void )
+{
+  char          l_sprite_filename[TRIX_PATH_MAX+1];
+  uint_fast8_t  l_sprite_scale;
+
+  /* Load up the sprite image if we don't already have it. */
+  if ( m_sprite_texture == NULL )
+  {
+    l_sprite_scale = display_find_asset( TRIX_ASSET_METRICS_SPRITES, l_sprite_filename );
+    m_sprite_texture = IMG_LoadTexture( display_get_renderer(), l_sprite_filename );
+    if ( m_sprite_texture == NULL )
+    {
+      log_write( ERROR, "IMG_LoadTexture of %s failed - %s", TRIX_ASSET_METRICS_SPRITES, SDL_GetError() );
+      return;
+    }
+
+    /* Now calculate the source rects we'll use for this sheet. */
+    memcpy( &m_fps_frame_src_rect, 
+            display_scale_rect_to_scale( 0, 0, 12, 8, l_sprite_scale ), 
+            sizeof( SDL_Rect ) );
+  }
+
+  /* And lastly the destination rects. */
+  memcpy( &m_fps_frame_target_rect, 
+          display_scale_rect_to_screen( 0, 102, 12, 8 ),
+          sizeof( SDL_Rect ) );
+
+  /* All done. */
+  return;
+}
+
+
+/*
+ * disaale - turn off metric gathering; stop counting and rendering the FPS
+ *           counter.
+ */
+
+void metrics_disable( void )
+{
+  /* All done. */
+  return;
+}
+
 
 /*
  * update - called every time we render a frame, to count the number of frames
@@ -63,6 +116,10 @@ void metrics_update( void )
 
 void metrics_render( void )
 {
+  /* Render the splash image, stretched if we need to. */
+  SDL_RenderCopy( display_get_renderer(), m_sprite_texture, 
+                  &m_fps_frame_src_rect, &m_fps_frame_target_rect );
+
   /* All done. */
   return;
 }

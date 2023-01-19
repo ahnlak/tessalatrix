@@ -20,17 +20,18 @@
 /* Constants. */
 
 #ifdef    PATH_MAX
-#define   TRIX_PATH_MAX           PATH_MAX
+#define   TRIX_PATH_MAX               PATH_MAX
 #else
-#define   TRIX_PATH_MAX           256
+#define   TRIX_PATH_MAX               256
 #endif /* PATH_MAX */
 
-#define   TRIX_FPS_MS             16
+#define   TRIX_FPS_MS                 16
 
 /* Asset locations. */
-#define   TRIX_ASSET_PATH         "assets"
-#define   TRIX_ASSET_SPLASH       "logo-ahnlak-larger"
-#define   TRIX_ASSET_MENU_SPRITES "menu-sprites"
+#define   TRIX_ASSET_PATH             "assets"
+#define   TRIX_ASSET_SPLASH           "logo-ahnlak-larger"
+#define   TRIX_ASSET_MENU_SPRITES     "menu-sprites"
+#define   TRIX_ASSET_METRICS_SPRITES  "metrics-sprites"
 
 
 /* Enums. */
@@ -112,6 +113,8 @@ trix_engine_t menu_update( void );
 void          menu_render( void );
 void          menu_fini( void );
 
+void          metrics_enable( void );
+void          metrics_disable( void );
 void          metrics_update( void );
 void          metrics_render( void );
 

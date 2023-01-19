@@ -156,6 +156,7 @@ int main( int argc, char **argv )
   {
     /* Initialise the starting engine (display needs to be initialised first) */
     l_current_engine.init();
+    metrics_enable();
 
     /* Dive into the main logic loop, until it exists. */
 #ifdef __EMSCRIPTEN__
