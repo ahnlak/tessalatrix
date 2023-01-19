@@ -34,9 +34,11 @@
 
 void main_loop( void *p_arg )
 {
-  SDL_Event       l_event;
-  trix_engine_t   l_target_engine;
-  trix_engine_st *l_current_engine = p_arg;
+  SDL_Event             l_event;
+  trix_engine_t         l_target_engine;
+  trix_engine_st       *l_current_engine = p_arg;
+  uint_fast32_t         l_this_tick;
+  static uint_fast32_t  l_last_tick;
 
   /* So, work through any queued up events. */
   while( SDL_PollEvent( &l_event ) != 0 )
@@ -92,10 +94,25 @@ void main_loop( void *p_arg )
     return;
   }
 
-  /* And then to render itself (if we have time) */
-  l_current_engine->render();
+  /* Get the current tick count, to see how good our performance is. */
+  l_this_tick = SDL_GetTicks();
 
-  /* Wait for the next tick, if we need to. */
+  /* Only render if we have enough time (aim for 60fps ~ 16.7ms) */
+  if ( ( l_this_tick - l_last_tick ) <= TRIX_FPS_MS )
+  {
+    /* And then to render itself (if we have time) */
+    l_current_engine->render();
+
+    /* Keep track of our performance metrics. */
+    metrics_update();
+
+    /* Wait for the next frame, if we need to. */
+    SDL_Delay( TRIX_FPS_MS - ( l_this_tick - l_last_tick ) );
+    l_this_tick = l_last_tick + TRIX_FPS_MS;
+  }
+
+  /* Save the last frame tick. */
+  l_last_tick = l_this_tick;
 
   /* All done for this loop. */
   return;

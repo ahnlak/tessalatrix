@@ -150,6 +150,9 @@ void splash_render( void )
   /* Render the splash image, stretched if we need to. */
   SDL_RenderCopy( display_get_renderer(), m_splash_texture, NULL, &m_target_rect );
 
+  /* Finally, render the metrics count. */
+  metrics_render();
+
   /* Last thing to do, ask the renderer to present to the window. */
   SDL_RenderPresent( display_get_renderer() );
 

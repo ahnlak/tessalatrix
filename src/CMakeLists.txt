@@ -5,7 +5,7 @@ set(APP_NAME tessalatrix)
 # Add the executable, and list all the source that goes into it
 add_executable(
   ${APP_NAME}
-  config.c display.c log.c menu.c splash.c tessalatrix.c util.c
+  config.c display.c log.c menu.c metrics.c splash.c tessalatrix.c util.c
 )
 
 # Make sure it's built in the top level directory

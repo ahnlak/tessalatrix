@@ -25,6 +25,7 @@
 #define   TRIX_PATH_MAX           256
 #endif /* PATH_MAX */
 
+#define   TRIX_FPS_MS             16
 
 /* Asset locations. */
 #define   TRIX_ASSET_PATH         "assets"
@@ -111,6 +112,8 @@ trix_engine_t menu_update( void );
 void          menu_render( void );
 void          menu_fini( void );
 
+void          metrics_update( void );
+void          metrics_render( void );
 
 void          splash_init( void );
 void          splash_event(const SDL_Event *);

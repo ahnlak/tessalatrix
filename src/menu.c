@@ -25,8 +25,44 @@
 /* Module variables. */
 
 static SDL_Texture   *m_sprite_texture;
-static uint_fast8_t   m_sprite_scale;
 static uint_fast32_t  m_start_tick;
+
+static SDL_Rect       m_sprite_rect_title;
+
+
+/*
+ * Static functions; a collection of things only built for use locally.
+ */
+
+/*
+ * load_sprites - called to (re) load the sprite sheet and calculate the
+ *                various source rectangles from it. Always called in init,
+ *                but can be recalled any time to deal with a change in
+ *                resolution.
+ */
+
+static bool menu_load_sprites( void )
+{
+  char          l_sprite_filename[TRIX_PATH_MAX+1];
+  uint_fast8_t  l_sprite_scale;
+
+  /* Load up the sprite image (hopefully!) */
+  l_sprite_scale = display_find_asset( TRIX_ASSET_MENU_SPRITES, l_sprite_filename );
+  m_sprite_texture = IMG_LoadTexture( display_get_renderer(), l_sprite_filename );
+  if ( m_sprite_texture == NULL )
+  {
+    log_write( ERROR, "IMG_LoadTexture of %s failed - %s", TRIX_ASSET_MENU_SPRITES, SDL_GetError() );
+    return false;
+  }
+
+  /* Now calculate the source rects we'll use for this sheet. */
+  memcpy( &m_sprite_rect_title, 
+          display_scale_rect_to_scale( 0, 0, 152, 18, l_sprite_scale ), 
+          sizeof( SDL_Rect ) );  
+
+  /* All done! */
+  return true;
+}
 
 
 /* Functions. */
@@ -40,11 +76,9 @@ void menu_init( void )
   char          l_sprite_filename[TRIX_PATH_MAX+1];
 
   /* Load up the sprite image (hopefully!) */
-  m_sprite_scale = display_find_asset( TRIX_ASSET_MENU_SPRITES, l_sprite_filename );
-  m_sprite_texture = IMG_LoadTexture( display_get_renderer(), l_sprite_filename );
-  if ( m_sprite_texture == NULL )
+  if ( !menu_load_sprites() )
   {
-    log_write( ERROR, "IMG_LoadTexture of %s failed - %s", TRIX_ASSET_MENU_SPRITES, SDL_GetError() );
+    log_write( ERROR, "Failed to load menu sprites" );
   }
 
   /* Remember what tick we were initialised at. */
@@ -87,18 +121,20 @@ trix_engine_t menu_update( void )
 
 void menu_render( void )
 {
-  SDL_Rect l_title_src, l_title_dest;
+  SDL_Rect l_title_dest;
 
   /* Clear to black. */
   SDL_SetRenderDrawColor( display_get_renderer(), 0, 0, 0, 255 );
   SDL_RenderClear( display_get_renderer() );
 
   /* Draw the title, centered, top of the screen. */
-  memcpy( &l_title_src, display_scale_rect_to_scale( 0, 0, 142, 17, m_sprite_scale ), sizeof( SDL_Rect ) );
-  memcpy( &l_title_dest, display_scale_rect_to_screen( 9, 1, 142, 17 ), sizeof( SDL_Rect ) );
+  memcpy( &l_title_dest, display_scale_rect_to_screen( 4, 1, 152, 18 ), sizeof( SDL_Rect ) );
 
   /* Do the blit. */
-  SDL_RenderCopy( display_get_renderer(), m_sprite_texture, &l_title_src, &l_title_dest );
+  SDL_RenderCopy( display_get_renderer(), m_sprite_texture, &m_sprite_rect_title, &l_title_dest );
+
+  /* Finally, render the metrics count. */
+  metrics_render();
 
   /* Last thing to do, ask the renderer to present to the window. */
   SDL_RenderPresent( display_get_renderer() );

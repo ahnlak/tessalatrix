@@ -30,6 +30,11 @@ static FILE        *m_log_fptr;
 
 /* Functions. */
 
+/*
+ * init - initialises the logging subsystem, using the configured log file
+ *        and falling back to stdout.
+ */
+
 bool log_init( void )
 {
   /* If the log filename is set to 'stdout', just use, well, stdout. */
@@ -53,6 +58,12 @@ bool log_init( void )
   return true;
 }
 
+
+/*
+ * write - if the current log level is at or above the requested level, write
+ *         the message to the logfile, date and timestamp prefixed.
+ *         Returns false if an error is encountered.
+ */
 
 bool log_write( trix_loglevel_t p_level, const char * p_message, ... )
 {
