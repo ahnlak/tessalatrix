@@ -26,12 +26,15 @@
 #endif /* PATH_MAX */
 
 #define   TRIX_FPS_MS                 16
+#define   TRIX_BOARD_HEIGHT           20
+#define   TRIX_BOARD_WIDTH            15
 
 /* Asset locations. */
 #define   TRIX_ASSET_PATH             "assets"
 #define   TRIX_ASSET_SPLASH           "logo-ahnlak-larger"
-#define   TRIX_ASSET_MENU_SPRITES     "menu-sprites"
 #define   TRIX_ASSET_METRICS_SPRITES  "metrics-sprites"
+#define   TRIX_ASSET_MENU_SPRITES     "menu-sprites"
+#define   TRIX_ASSET_GAME_SPRITES     "game-sprites"
 
 
 /* Enums. */
@@ -50,7 +53,7 @@ typedef enum
 
 typedef enum
 {
-  ENGINE_SPLASH, ENGINE_MENU, ENGINE_EXIT
+  ENGINE_SPLASH, ENGINE_MENU, ENGINE_GAME, ENGINE_EXIT
 } trix_engine_t;
 
 
@@ -104,6 +107,12 @@ SDL_Rect     *display_scale_rect_to_screen( uint_fast8_t, uint_fast8_t, uint_fas
 SDL_Rect     *display_scale_rect_to_scale( uint_fast8_t, uint_fast8_t, uint_fast8_t, uint_fast8_t, uint_fast8_t );
 uint_fast8_t  display_find_asset( const char *, char * );
 
+void          game_init( void );
+void          game_event(const SDL_Event *);
+trix_engine_t game_update( void );
+void          game_render( void );
+void          game_fini( void );
+
 bool          log_init( void );
 bool          log_write( trix_loglevel_t, const char *, ... );
 
@@ -115,6 +124,7 @@ void          menu_fini( void );
 
 void          metrics_enable( void );
 void          metrics_disable( void );
+void          metrics_toggle( void );
 void          metrics_update( void );
 void          metrics_render( void );
 

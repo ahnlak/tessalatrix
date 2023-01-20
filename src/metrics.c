@@ -25,12 +25,15 @@
 
 /* Module variables. */
 
+static bool           m_active = false;
 static time_t         m_current_second;
 static uint_fast8_t   m_current_frames;
 static uint_fast8_t   m_last_fps;
 static SDL_Texture   *m_sprite_texture = NULL;
 static SDL_Rect       m_fps_frame_src_rect;
 static SDL_Rect       m_fps_frame_target_rect;
+static SDL_Rect       m_fps_digit_src_rect[10];
+static SDL_Rect       m_fps_digit_target_rect[2];
 
 
 /* Functions. */
@@ -44,6 +47,7 @@ void metrics_enable( void )
 {
   char          l_sprite_filename[TRIX_PATH_MAX+1];
   uint_fast8_t  l_sprite_scale;
+  uint_fast8_t  l_index;
 
   /* Load up the sprite image if we don't already have it. */
   if ( m_sprite_texture == NULL )
@@ -60,12 +64,27 @@ void metrics_enable( void )
     memcpy( &m_fps_frame_src_rect, 
             display_scale_rect_to_scale( 0, 0, 12, 8, l_sprite_scale ), 
             sizeof( SDL_Rect ) );
+    for( l_index = 0; l_index < 10; l_index++ )
+    {
+      memcpy( &m_fps_digit_src_rect[l_index], 
+              display_scale_rect_to_scale( 4 * l_index, 8, 4, 4, l_sprite_scale ), 
+              sizeof( SDL_Rect ) );      
+    }
   }
 
   /* And lastly the destination rects. */
-  memcpy( &m_fps_frame_target_rect, 
+  memcpy( &m_fps_frame_target_rect,
           display_scale_rect_to_screen( 0, 102, 12, 8 ),
           sizeof( SDL_Rect ) );
+  memcpy( &m_fps_digit_target_rect[0],
+          display_scale_rect_to_screen( 2, 104, 4, 4 ),
+          sizeof( SDL_Rect ) );
+  memcpy( &m_fps_digit_target_rect[1],
+          display_scale_rect_to_screen( 6, 104, 4, 4 ),
+          sizeof( SDL_Rect ) );
+
+  /* And lastly, flag ourselves as active. */
+  m_active = true;
 
   /* All done. */
   return;
@@ -73,16 +92,39 @@ void metrics_enable( void )
 
 
 /*
- * disaale - turn off metric gathering; stop counting and rendering the FPS
+ * disable - turn off metric gathering; stop counting and rendering the FPS
  *           counter.
  */
 
 void metrics_disable( void )
 {
+  /* Just turn off the flag. */
+  m_active = false;
+
   /* All done. */
   return;
 }
 
+
+/*
+ * toggle - simply inverts the enable flag, without needing to know what state
+ *          we're already in. 
+ */
+
+void metrics_toggle( void )
+{
+  if ( m_active )
+  {
+    metrics_disable();
+  }
+  else
+  {
+    metrics_enable();
+  }
+
+  /* All done. */
+  return;
+}
 
 /*
  * update - called every time we render a frame, to count the number of frames
@@ -91,6 +133,12 @@ void metrics_disable( void )
 
 void metrics_update( void )
 {
+  /* If we're not active, jump out immediately. */
+  if ( !m_active )
+  {
+    return;
+  }
+
   time_t  l_this_second = time( NULL );
 
   /* If a new second has begun, start counting again. */
@@ -116,9 +164,21 @@ void metrics_update( void )
 
 void metrics_render( void )
 {
-  /* Render the splash image, stretched if we need to. */
+  /* If we're not active, jump out immediately. */
+  if ( !m_active )
+  {
+    return;
+  }
+
+  /* Render the FPS background, stretched if we need to. */
   SDL_RenderCopy( display_get_renderer(), m_sprite_texture, 
                   &m_fps_frame_src_rect, &m_fps_frame_target_rect );
+
+  /* And now the two digits of the FPS count (it's capped at 60) */
+  SDL_RenderCopy( display_get_renderer(), m_sprite_texture, 
+                  &m_fps_digit_src_rect[m_last_fps/10], &m_fps_digit_target_rect[0] );
+  SDL_RenderCopy( display_get_renderer(), m_sprite_texture, 
+                  &m_fps_digit_src_rect[m_last_fps%10], &m_fps_digit_target_rect[1] );
 
   /* All done. */
   return;

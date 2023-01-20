@@ -1,9 +1,8 @@
 /*
  * menu.c - part of Tessalatrix
  *
- * Engine for rendering the 'ahnlak' splash branding; about as simple as
- * engines get, we just fade in and then out the logo, while allowing users
- * to anykey out of it.
+ * Handles the main menu, from which users can start/resume the game, change
+ * game and display options, and of course exit.
  *
  * Copyright (c) 2023 Pete Favelle <ahnlak@ahnlak.com>
  *
@@ -26,8 +25,8 @@
 
 static SDL_Texture   *m_sprite_texture;
 static uint_fast32_t  m_start_tick;
-
 static SDL_Rect       m_sprite_rect_title;
+static SDL_Keycode    m_current_cmd;
 
 
 /*
@@ -73,13 +72,14 @@ static bool menu_load_sprites( void )
 
 void menu_init( void )
 {
-  char          l_sprite_filename[TRIX_PATH_MAX+1];
-
   /* Load up the sprite image (hopefully!) */
   if ( !menu_load_sprites() )
   {
     log_write( ERROR, "Failed to load menu sprites" );
   }
+
+  /* Clear any current command. */
+  m_current_cmd = SDLK_UNKNOWN;
 
   /* Remember what tick we were initialised at. */
   m_start_tick = SDL_GetTicks();
@@ -97,6 +97,14 @@ void menu_init( void )
 
 void menu_event( const SDL_Event *p_event )
 {
+  /* If it's a keypress, set the current command to this; yes, if the user */
+  /* presses multiple keys in the same frame, we may drop some. So, maybe  */
+  /* don't do that?!                                                       */
+  if ( p_event->type == SDL_KEYDOWN )
+  {
+    m_current_cmd = p_event->key.keysym.sym;
+  }
+
   /* All done. */
   return;
 }
@@ -109,6 +117,17 @@ void menu_event( const SDL_Event *p_event )
 
 trix_engine_t menu_update( void )
 {
+  /* Process the current command. */
+  switch( m_current_cmd )
+  {
+    case SDLK_RETURN:     /* For now, bounce onto the game. */
+      return ENGINE_GAME;
+      break;
+  }
+
+  /* Clear any current command, for the next input. */
+  m_current_cmd = SDLK_UNKNOWN;
+
   /* By default, ask to stay in our current engine. */
   return ENGINE_MENU;
 }

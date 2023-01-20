@@ -50,6 +50,12 @@ void main_loop( void *p_arg )
       break;
     }
 
+    /* FPS meter toggle, a keypress that's outside of machine handling. */
+    if ( ( l_event.type == SDL_KEYDOWN ) && ( l_event.key.keysym.sym == SDLK_BACKQUOTE ) )
+    {
+      metrics_toggle();
+    }
+
     /* And pass any remaining events into the current engine. */
     l_current_engine->event( &l_event );
   }
@@ -73,12 +79,21 @@ void main_loop( void *p_arg )
     switch( l_target_engine )
     {
       case ENGINE_MENU:       /* Render the main menu to the user. */
-        l_current_engine->type = ENGINE_MENU;
-        l_current_engine->init = menu_init;
-        l_current_engine->event = menu_event;
+        l_current_engine->type   = ENGINE_MENU;
+        l_current_engine->init   = menu_init;
+        l_current_engine->event  = menu_event;
         l_current_engine->update = menu_update;
         l_current_engine->render = menu_render;
-        l_current_engine->fini = menu_fini;
+        l_current_engine->fini   = menu_fini;
+        break;
+
+      case ENGINE_GAME:       /* Render the game to the user. */
+        l_current_engine->type   = ENGINE_GAME;
+        l_current_engine->init   = game_init;
+        l_current_engine->event  = game_event;
+        l_current_engine->update = game_update;
+        l_current_engine->render = game_render;
+        l_current_engine->fini   = game_fini;
         break;
 
       case ENGINE_EXIT:       /* We want to exit the game now. */
@@ -156,7 +171,6 @@ int main( int argc, char **argv )
   {
     /* Initialise the starting engine (display needs to be initialised first) */
     l_current_engine.init();
-    metrics_enable();
 
     /* Dive into the main logic loop, until it exists. */
 #ifdef __EMSCRIPTEN__
