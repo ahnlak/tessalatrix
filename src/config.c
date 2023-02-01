@@ -123,7 +123,7 @@ bool config_load( int p_argc, char **p_argv )
   /* First step, set up all our default values. */
   config_set_int( CONF_LOG_LEVEL, ERROR, false );
   config_set_string( CONF_LOG_FILENAME, "tessalatrix.log", false );
-  config_set_int( CONF_RESOLUTION, 0, true );
+  config_set_int( CONF_RESOLUTION, 3, true );
 
   /* Load up any configuration file we can find. */
   /* __RETURN__ */

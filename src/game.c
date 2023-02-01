@@ -23,10 +23,15 @@
 /* Module variables. */
 
 static SDL_Texture   *m_sprite_texture;
+static uint_fast8_t   m_sprite_scale;
+
 static uint_fast32_t  m_start_tick;
 
 static uint_fast8_t   m_board_width;
-
+static trix_piece_t   m_board[TRIX_BOARD_WIDTH][TRIX_BOARD_HEIGHT];
+static trix_piece_st  m_current_piece;
+static SDL_Point      m_current_location;
+static uint_fast8_t   m_current_rotation;
 static SDL_Rect       m_sprite_rect_title;
 static SDL_Rect       m_border_bl_src_rect;
 static SDL_Rect       m_border_base_src_rect;
@@ -52,10 +57,9 @@ static SDL_Rect       m_border_br_target_rect;
 static bool game_load_sprites( void )
 {
   char          l_sprite_filename[TRIX_PATH_MAX+1];
-  uint_fast8_t  l_sprite_scale;
 
   /* Load up the sprite image (hopefully!) */
-  l_sprite_scale = display_find_asset( TRIX_ASSET_GAME_SPRITES, l_sprite_filename );
+  m_sprite_scale = display_find_asset( TRIX_ASSET_GAME_SPRITES, l_sprite_filename );
   m_sprite_texture = IMG_LoadTexture( display_get_renderer(), l_sprite_filename );
   if ( m_sprite_texture == NULL )
   {
@@ -65,19 +69,19 @@ static bool game_load_sprites( void )
 
   /* Now calculate the source rects we'll use for this sheet. */
   memcpy( &m_border_bl_src_rect, 
-          display_scale_rect_to_scale( 0, 5, 5, 5, l_sprite_scale ), 
+          display_scale_rect_to_scale( 0, 5, 5, 5, m_sprite_scale ), 
           sizeof( SDL_Rect ) );  
   memcpy( &m_border_base_src_rect, 
-          display_scale_rect_to_scale( 5, 5, 5, 5, l_sprite_scale ), 
+          display_scale_rect_to_scale( 5, 5, 5, 5, m_sprite_scale ), 
           sizeof( SDL_Rect ) );  
   memcpy( &m_border_br_src_rect, 
-          display_scale_rect_to_scale( 10, 5, 5, 5, l_sprite_scale ), 
+          display_scale_rect_to_scale( 10, 5, 5, 5, m_sprite_scale ), 
           sizeof( SDL_Rect ) );  
   memcpy( &m_border_left_src_rect, 
-          display_scale_rect_to_scale( 15, 5, 5, 5, l_sprite_scale ), 
+          display_scale_rect_to_scale( 15, 5, 5, 5, m_sprite_scale ), 
           sizeof( SDL_Rect ) );  
   memcpy( &m_border_right_src_rect, 
-          display_scale_rect_to_scale( 20, 5, 5, 5, l_sprite_scale ), 
+          display_scale_rect_to_scale( 20, 5, 5, 5, m_sprite_scale ), 
           sizeof( SDL_Rect ) );
 
   /* And work out the target corners of the game board, too. */
@@ -88,10 +92,31 @@ static bool game_load_sprites( void )
           display_scale_rect_to_screen( 5 * ( m_board_width+1 ), 105, 5, 5 ), 
           sizeof( SDL_Rect ) );  
 
-printf( "left is %d, %d, %dx%d\n", m_border_left_src_rect.x, m_border_left_src_rect.y, m_border_left_src_rect.w, m_border_left_src_rect.h );
-printf( "right is %d, %d, %dx%d\n", m_border_right_src_rect.x, m_border_right_src_rect.y, m_border_right_src_rect.w, m_border_right_src_rect.h );
   /* All done! */
   return true;
+}
+
+
+/*
+ * init_board - called at the start of a game, to initialise the board ready
+ *              to be played. This involves selecting the correct board width
+ *              for our game type, and making sure it's empty.
+ */
+
+static void game_init_board( void )
+{
+  uint_fast8_t l_row, l_column;
+
+  /* For now, we only understand four-block pieces. */
+  m_board_width = 10;
+
+  for ( l_row = 0; l_row < TRIX_BOARD_HEIGHT; l_row++ )
+  {
+    for ( l_column = 0; l_column < m_board_width; l_column++ )
+    {
+      m_board[l_column][l_row] = PIECE_NONE;
+    }
+  }
 }
 
 
@@ -104,7 +129,7 @@ printf( "right is %d, %d, %dx%d\n", m_border_right_src_rect.x, m_border_right_sr
 void game_init( void )
 {
   /* Initialise the board, suitable for the current game mode. */
-  m_board_width = 10;
+  game_init_board();
 
   /* Load up the sprite image (hopefully!) */
   if ( !game_load_sprites() )
@@ -140,6 +165,14 @@ void game_event( const SDL_Event *p_event )
 
 trix_engine_t game_update( void )
 {
+  /* If we don't have a current piece, we should probably pick one. */
+  if ( m_current_piece.piece == PIECE_NONE )
+  {
+    memcpy( &m_current_piece, piece_select( GAME_MODE_STANDARD ), sizeof( trix_piece_st ) );
+    m_current_location.x = ( m_board_width / 2 ) - 1;
+    m_current_location.y = 0;
+  }
+
   /* By default, ask to stay in our current engine. */
   return ENGINE_GAME;
 }
@@ -153,6 +186,8 @@ trix_engine_t game_update( void )
 void game_render( void )
 {
   uint_fast8_t  l_index;
+  uint_fast8_t  l_row, l_column;
+  SDL_Rect      l_source_block, l_target_block;
 
   /* Clear to black. */
   SDL_SetRenderDrawColor( display_get_renderer(), 0, 0, 0, 255 );
@@ -170,12 +205,62 @@ void game_render( void )
   }
 
   /* Lastly the walls. */
-  for( l_index = 1; l_index < TRIX_BOARD_HEIGHT; l_index++ )
+  for( l_index = 1; l_index <= TRIX_BOARD_HEIGHT; l_index++ )
   {
     SDL_RenderCopy( display_get_renderer(), m_sprite_texture, &m_border_left_src_rect,
                     display_scale_rect_to_screen( 0, 105 - ( 5 * l_index ), 5, 5 ) );
     SDL_RenderCopy( display_get_renderer(), m_sprite_texture, &m_border_right_src_rect,
                     display_scale_rect_to_screen( 5 * ( m_board_width+1 ), 105 - ( 5 * l_index ), 5, 5 ) );
+  }
+
+  /* Now, run through the board and render any blocks. */
+  for ( l_row = 0; l_row < TRIX_BOARD_HEIGHT; l_row++ )
+  {
+    for ( l_column = 0; l_column < m_board_width; l_column++ )
+    {
+      /* Precalculate the destination rectangle. */
+      memcpy( &l_target_block, 
+              display_scale_rect_to_screen( 5 + ( 5 * l_column ), 5 + ( 5 * l_row ), 5, 5 ),
+              sizeof( SDL_Rect ) );
+
+      /* All the four-piece blocks are in a simply addressable row. */
+      if ( ( m_board[l_column][l_row] > PIECE_4_MIN ) && 
+           ( m_board[l_column][l_row] < PIECE_4_MAX ) )
+      {
+        SDL_RenderCopy( display_get_renderer(), m_sprite_texture, 
+                        display_scale_rect_to_scale( 5 * ( m_board[l_column][l_row] - PIECE_4_MIN - 1 ), 0, 5, 5, m_sprite_scale ), 
+                        &l_target_block );
+      }
+    }
+  }
+
+  /* Draw the current piece into it's board location. */
+  if ( m_current_piece.piece != PIECE_NONE )
+  {
+    /* We'll use the same rect for all the blocks of the same piece. */
+
+    /* All the four-piece blocks are in a simply addressable row. */
+    if ( ( m_current_piece.piece > PIECE_4_MIN ) && 
+         ( m_current_piece.piece < PIECE_4_MAX ) )
+    {
+      memcpy( &l_source_block,
+              display_scale_rect_to_scale( 5 * ( m_current_piece.piece - PIECE_4_MIN - 1 ), 
+                                           0, 5, 5, m_sprite_scale ),
+              sizeof( SDL_Rect ) );
+    }
+
+    /* Work through the defined blocks on the current rotation. */
+    for( l_index = 0; l_index < m_current_piece.block_count; l_index++ )
+    {
+      memcpy( &l_target_block, 
+              display_scale_rect_to_screen( 5 + ( 5 * (m_current_location.x+m_current_piece.blocks[m_current_rotation][l_index].x) ), 
+                                            5 + ( 5 * (m_current_location.y+m_current_piece.blocks[m_current_rotation][l_index].y) ),
+                                            5, 5 ),
+              sizeof( SDL_Rect ) );
+
+      SDL_RenderCopy( display_get_renderer(), m_sprite_texture, 
+                      &l_source_block, &l_target_block );
+    }
   }
 
   /* Finally, render the metrics count. */

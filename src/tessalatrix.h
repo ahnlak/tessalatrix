@@ -56,6 +56,19 @@ typedef enum
   ENGINE_SPLASH, ENGINE_MENU, ENGINE_GAME, ENGINE_EXIT
 } trix_engine_t;
 
+typedef enum
+{
+  GAME_MODE_STANDARD
+} trix_gamemode_t;
+
+typedef enum
+{
+  PIECE_NONE, 
+  PIECE_4_MIN, PIECE_4_SQUARE, PIECE_4_LONG, PIECE_4_ELL, 
+  PIECE_4_BELL, PIECE_4_TEE, PIECE_4_ESS, PIECE_4_BESS, PIECE_4_MAX,
+  PIECE_MAX
+} trix_piece_t;
+
 
 /* Structs. */
 
@@ -89,6 +102,13 @@ typedef struct {
   int_fast16_t  h;
   uint_fast8_t  scale;
 } trix_resolution_st;
+
+typedef struct {
+  trix_piece_t  piece;
+  uint_fast8_t  value;
+  uint_fast8_t  block_count;
+  SDL_Point     blocks[4][5];
+} trix_piece_st;
 
 
 /* Prototypes. */
@@ -127,6 +147,8 @@ void          metrics_disable( void );
 void          metrics_toggle( void );
 void          metrics_update( void );
 void          metrics_render( void );
+
+const trix_piece_st *piece_select( trix_gamemode_t );
 
 void          splash_init( void );
 void          splash_event(const SDL_Event *);
