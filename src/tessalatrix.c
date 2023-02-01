@@ -12,6 +12,8 @@
 /* System headers. */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "SDL.h"
 
 #ifdef __EMSCRIPTEN__
@@ -165,6 +167,9 @@ int main( int argc, char **argv )
   l_current_engine.update = splash_update;
   l_current_engine.render = splash_render;
   l_current_engine.fini = splash_fini;
+
+  /* Initialise the random number generator. It's not perfect, but it'll do. */
+  srand( time( NULL ) );
 
   /* Set up the display. */
   if ( display_init() )

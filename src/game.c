@@ -170,7 +170,7 @@ trix_engine_t game_update( void )
   {
     memcpy( &m_current_piece, piece_select( GAME_MODE_STANDARD ), sizeof( trix_piece_st ) );
     m_current_location.x = ( m_board_width / 2 ) - 1;
-    m_current_location.y = 0;
+    m_current_location.y = -1;
   }
 
   /* By default, ask to stay in our current engine. */
