@@ -29,6 +29,10 @@
 #define   TRIX_BOARD_HEIGHT           20
 #define   TRIX_BOARD_WIDTH            15
 
+#define   TRIX_MOVE_MS                75
+#define   TRIX_FALL_MS                25
+#define   TRIX_BASE_DROP_MS           250
+
 /* Asset locations. */
 #define   TRIX_ASSET_PATH             "assets"
 #define   TRIX_ASSET_SPLASH           "logo-ahnlak-larger"

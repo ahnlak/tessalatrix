@@ -11,6 +11,7 @@
 /* System headers. */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "SDL.h"
 #include "SDL_image.h"
 
@@ -25,7 +26,12 @@
 static SDL_Texture   *m_sprite_texture;
 static uint_fast8_t   m_sprite_scale;
 
-static uint_fast32_t  m_start_tick;
+static uint_fast32_t  m_last_move_tick;
+static uint_fast32_t  m_last_drop_tick;
+
+static uint_fast32_t  m_drop_speed;
+
+static bool           m_dropping;
 
 static uint_fast8_t   m_board_width;
 static trix_piece_t   m_board[TRIX_BOARD_WIDTH][TRIX_BOARD_HEIGHT];
@@ -117,6 +123,79 @@ static void game_init_board( void )
       m_board[l_column][l_row] = PIECE_NONE;
     }
   }
+
+  /* Reset our game parameters. */
+  m_drop_speed = TRIX_BASE_DROP_MS;
+  m_dropping = false;
+}
+
+
+/*
+ * check_space - a simple boolean flag to show if a given piece / rotation /
+ *               location can fit onto the game board.
+ */
+
+static bool game_check_space( const trix_piece_st *p_piece, uint_fast8_t p_rotation, 
+                              SDL_Point p_location )
+{
+  uint_fast8_t  l_index;
+  SDL_Point     l_block_loc;
+
+  /* Work through all the blocks of the piece. */
+  for( l_index = 0; l_index < p_piece->block_count; l_index++ )
+  {
+    /* Work out the block address. */
+    l_block_loc.x = p_location.x + p_piece->blocks[p_rotation][l_index].x;
+    l_block_loc.y = p_location.y + p_piece->blocks[p_rotation][l_index].y;
+
+    /* Check that we're not off the board. */
+    if ( ( l_block_loc.y >= TRIX_BOARD_HEIGHT ) ||
+         ( l_block_loc.x < 0 ) || ( l_block_loc.x >= m_board_width ) )
+    {
+      return false;
+    }
+
+    /* Check to see if the board is occupied, but ignore space above. */
+    if ( ( l_block_loc.y >= 0 ) && ( m_board[l_block_loc.x][l_block_loc.y] != PIECE_NONE ) )
+    {
+      return false;
+    }
+  }
+
+  /* No clashes, so it's a valid move. */
+  return true;
+}
+
+
+/*
+ * copy_to_board - adds the specified piece to the game board, if possible.
+ */
+
+static bool game_copy_to_board( const trix_piece_st *p_piece, uint_fast8_t p_rotation, 
+                                SDL_Point p_location )
+{
+  uint_fast8_t  l_index;
+  SDL_Point     l_block_loc;
+
+  /* Sanity check that we can do this. */
+  if ( !game_check_space( p_piece, p_rotation, p_location ) )
+  {
+    return false;
+  }
+
+  /* Good; should be a simple process then. */
+  for( l_index = 0; l_index < p_piece->block_count; l_index++ )
+  {
+    /* Work out the block address. */
+    l_block_loc.x = p_location.x + p_piece->blocks[p_rotation][l_index].x;
+    l_block_loc.y = p_location.y + p_piece->blocks[p_rotation][l_index].y;
+
+    /* And add it to the board. */
+    m_board[l_block_loc.x][l_block_loc.y] = p_piece->piece;
+  }
+
+  /* All good then! */
+  return true;
 }
 
 
@@ -138,7 +217,7 @@ void game_init( void )
   }
 
   /* Remember what tick we were initialised at. */
-  m_start_tick = SDL_GetTicks();
+  m_last_drop_tick = m_last_move_tick = SDL_GetTicks();
 
   /* All done. */
   return;
@@ -153,6 +232,72 @@ void game_init( void )
 
 void game_event( const SDL_Event *p_event )
 {
+  uint_fast32_t l_current_tick = SDL_GetTicks();
+  uint_fast8_t  l_new_rotation;
+  SDL_Point     l_new_location;
+
+  /* Consider the type of event we have. */
+  if ( p_event->type == SDL_KEYDOWN )
+  {
+    switch( p_event->key.keysym.sym )
+    {
+      case SDLK_COMMA:                                      /* Move left. */
+      case SDLK_LEFT:
+        /* Only attempt the move every TRIX_MOVE_MS milliseconds. */
+        if ( l_current_tick > ( m_last_move_tick + TRIX_MOVE_MS ) )
+        {
+          /* Work out the new position. */
+          l_new_location.x = m_current_location.x - 1;
+          l_new_location.y = m_current_location.y;
+
+          /* Check that we'll fit. */
+          if ( game_check_space( &m_current_piece, m_current_rotation, l_new_location ) )
+          {
+            m_current_location.x = l_new_location.x;
+            m_last_move_tick = l_current_tick;
+          }
+        }
+        break;
+      case SDLK_SLASH:                                     /* Move right. */
+      case SDLK_RIGHT:
+        /* Only attempt the move every TRIX_MOVE_MS milliseconds. */
+        if ( l_current_tick > ( m_last_move_tick + TRIX_MOVE_MS ) )
+        {
+          /* Work out the new position. */
+          l_new_location.x = m_current_location.x + 1;
+          l_new_location.y = m_current_location.y;
+
+          /* Check that we'll fit. */
+          if ( game_check_space( &m_current_piece, m_current_rotation, l_new_location ) )
+          {
+            m_current_location.x = l_new_location.x;
+            m_last_move_tick = l_current_tick;
+          }
+        }
+        break;
+      case SDLK_PERIOD:                                        /* Rotate. */
+      case SDLK_UP:
+        /* Only attempt the move every TRIX_MOVE_MS milliseconds. */
+        if ( l_current_tick > ( m_last_move_tick + TRIX_MOVE_MS ) )
+        {
+          /* Work out the new position. */
+          l_new_rotation = m_current_rotation >= 3 ? 0 : m_current_rotation+1;
+
+          /* Check that we'll fit. */
+          if ( game_check_space( &m_current_piece, l_new_rotation, m_current_location ) )
+          {
+            m_current_rotation = l_new_rotation;
+            m_last_move_tick = l_current_tick;
+          }
+        }
+        break;
+
+      case SDLK_SPACE:                                           /* Drop. */
+        m_dropping = true;
+        break;
+    }
+  }
+
   /* All done. */
   return;
 }
@@ -165,12 +310,39 @@ void game_event( const SDL_Event *p_event )
 
 trix_engine_t game_update( void )
 {
+  uint_fast32_t l_current_tick = SDL_GetTicks();
+  SDL_Point     l_new_location;
+
+  /* If it's time to drop the current piece another line, do so. */
+  if ( ( l_current_tick >= ( m_last_drop_tick + m_drop_speed ) ) ||
+       ( ( m_dropping ) && ( l_current_tick >= ( m_last_drop_tick + TRIX_FALL_MS ) ) ) )
+  {
+    /* Fairly simple, increment the Y axis and check it worked. */
+    l_new_location.x = m_current_location.x;
+    l_new_location.y = m_current_location.y + 1;
+
+    /* Check that we'll fit. */
+    if ( game_check_space( &m_current_piece, m_current_rotation, l_new_location ) )
+    {
+      m_current_location.y = l_new_location.y;
+      m_last_drop_tick = l_current_tick;
+    }
+    else
+    {
+      /* It doesn't fit, so transfer it to the board, and spawn a fresh piece. */
+      game_copy_to_board( &m_current_piece, m_current_rotation, m_current_location );
+      m_current_piece.piece = PIECE_NONE;
+    }
+  }
+
   /* If we don't have a current piece, we should probably pick one. */
   if ( m_current_piece.piece == PIECE_NONE )
   {
     memcpy( &m_current_piece, piece_select( GAME_MODE_STANDARD ), sizeof( trix_piece_st ) );
     m_current_location.x = ( m_board_width / 2 ) - 1;
     m_current_location.y = -1;
+    m_current_rotation = rand() % 4;
+    m_dropping = false;
   }
 
   /* By default, ask to stay in our current engine. */
