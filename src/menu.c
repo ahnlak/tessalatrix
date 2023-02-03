@@ -36,8 +36,13 @@ static SDL_Rect       m_sprite_menu_rect[TRIX_MENU_ENTRIES];
 static SDL_Rect       m_target_menu_rect[TRIX_MENU_ENTRIES];
 static SDL_Rect       m_target_menu_deco_rect[TRIX_MENU_ENTRIES];
 static bool           m_menu_blink;
-static bool           m_resume_enabled;
+static bool           m_option_enabled[TRIX_MENU_ENTRIES];
+
 static SDL_Keycode    m_current_cmd;
+static SDL_Point      m_mouse_location;
+static bool           m_mouse_moved;
+static bool           m_mouse_clicked;
+
 static uint_fast8_t   m_current_option;
 
 
@@ -125,6 +130,8 @@ static bool menu_load_sprites( void )
 
 void menu_init( void )
 {
+  uint_fast8_t l_index;
+
   /* Load up the sprite image (hopefully!) */
   if ( !menu_load_sprites() )
   {
@@ -134,8 +141,13 @@ void menu_init( void )
   /* Clear any current command. */
   m_current_cmd = SDLK_UNKNOWN;
   m_current_option = 0;
+  m_mouse_moved = false;
 
-  m_resume_enabled = false;
+  for ( l_index = 0; l_index < TRIX_MENU_ENTRIES; l_index++ )
+  {
+    m_option_enabled[l_index] = true;
+  }
+  m_option_enabled[1] = false;
 
   /* Remember what tick we were initialised at. */
   m_blink_tick = m_last_move_tick = SDL_GetTicks();
@@ -161,6 +173,18 @@ void menu_event( const SDL_Event *p_event )
     m_current_cmd = p_event->key.keysym.sym;
   }
 
+  /* If the mouse has moved, flag the movement and remember the location. */
+  if ( p_event->type == SDL_MOUSEMOTION )
+  {
+    m_mouse_moved = true;
+    m_mouse_location.x = p_event->motion.x;
+    m_mouse_location.y = p_event->motion.y;
+  }
+  if ( p_event->type == SDL_MOUSEBUTTONDOWN )
+  {
+    m_mouse_clicked = true;
+  }
+
   /* All done. */
   return;
 }
@@ -173,6 +197,8 @@ void menu_event( const SDL_Event *p_event )
 
 trix_engine_t menu_update( void )
 {
+  uint_fast8_t  l_index;
+  int_fast8_t   l_new_option;
   uint_fast32_t l_current_tick = SDL_GetTicks();
 
   /* Blink the cursor on the menu. */
@@ -180,6 +206,32 @@ trix_engine_t menu_update( void )
   {
     m_menu_blink = !m_menu_blink;
     m_blink_tick = l_current_tick;
+  }
+
+  /* Handle any mouse movements. */
+  if ( m_mouse_moved || m_mouse_clicked )
+  {
+    /* Work out which menu it's in... */
+    for( l_index = 0; l_index < TRIX_MENU_ENTRIES; l_index++ )
+    {
+      /* If the mouse location is in the menu button, select it! */
+      if ( ( m_option_enabled[l_index] ) && 
+           ( SDL_PointInRect( &m_mouse_location, &m_target_menu_rect[l_index] ) ) )
+      {
+        /* Select the option. */
+        m_current_option = l_index;
+
+        /* And if we've clicked, select that option too. */
+        if ( m_mouse_clicked )
+        {
+          m_current_cmd = SDLK_RETURN;
+        }
+        break;
+      }
+    }
+
+    /* And clear the mouse flags. */
+    m_mouse_moved = m_mouse_clicked = false;
   }
 
   /* Process the current command. */
@@ -192,7 +244,19 @@ trix_engine_t menu_update( void )
         /* Move around the menu. */
         if ( m_current_option > 0 ) 
         {
-          m_current_option--;
+          l_new_option = m_current_option - 1;
+          while( l_new_option >= 0 )
+          {
+            if ( m_option_enabled[l_new_option] )
+            {
+              break;
+            }
+            l_new_option--;
+          }
+          if ( l_new_option >= 0 )
+          {
+            m_current_option = l_new_option;
+          }
         }
         m_last_move_tick = l_current_tick;
       }
@@ -204,7 +268,19 @@ trix_engine_t menu_update( void )
         /* Move around the menu. */
         if ( m_current_option < TRIX_MENU_ENTRIES-1 ) 
         {
-          m_current_option++;
+          l_new_option = m_current_option + 1;
+          while( l_new_option < TRIX_MENU_ENTRIES )
+          {
+            if ( m_option_enabled[l_new_option] )
+            {
+              break;
+            }
+            l_new_option++;
+          }
+          if ( l_new_option < TRIX_MENU_ENTRIES )
+          {
+            m_current_option = l_new_option;
+          }
         }
         m_last_move_tick = l_current_tick;
       }
@@ -261,14 +337,14 @@ void menu_render( void )
   /* Work through all the menu entries themselves. */
   for ( l_index = 0; l_index < TRIX_MENU_ENTRIES; l_index++ )
   {
-    /* The resume option can be grayed out; just drop the alpha. */
-    if ( !m_resume_enabled && ( l_index == 1 ) )
+    /* For disabled options, just drop the alpha. */
+    if ( !m_option_enabled[l_index] )
     {
       SDL_SetTextureAlphaMod( m_sprite_texture, 150 );
     }
     SDL_RenderCopy( display_get_renderer(), m_sprite_texture,
                     &m_sprite_menu_rect[l_index], &m_target_menu_rect[l_index] );
-    if ( !m_resume_enabled && ( l_index == 1 ) )
+    if ( !m_option_enabled[l_index] )
     {
       SDL_SetTextureAlphaMod( m_sprite_texture, 255 );
     }

@@ -74,7 +74,7 @@ void splash_init( void )
 void splash_event( const SDL_Event *p_event )
 {
   /* Pressing any key is enough to skip the boring splash. */
-  if ( p_event->type == SDL_KEYDOWN )
+  if ( ( p_event->type == SDL_KEYDOWN ) || ( p_event->type == SDL_MOUSEBUTTONDOWN ) )
   {
     m_abort = true;
   }
