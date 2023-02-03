@@ -33,6 +33,8 @@
 #define   TRIX_FALL_MS                25
 #define   TRIX_BASE_DROP_MS           250
 
+#define   TRIX_MENU_ENTRIES           5
+
 /* Asset locations. */
 #define   TRIX_ASSET_PATH             "assets"
 #define   TRIX_ASSET_SPLASH           "logo-ahnlak-larger"

@@ -32,6 +32,7 @@ static uint_fast32_t  m_last_drop_tick;
 static uint_fast32_t  m_drop_speed;
 
 static bool           m_dropping;
+static SDL_Keycode    m_current_cmd;
 
 static uint_fast8_t   m_board_width;
 static trix_piece_t   m_board[TRIX_BOARD_WIDTH][TRIX_BOARD_HEIGHT];
@@ -216,6 +217,9 @@ void game_init( void )
     log_write( ERROR, "Failed to load menu sprites" );
   }
 
+  /* Clear any current command. */
+  m_current_cmd = SDLK_UNKNOWN;
+
   /* Remember what tick we were initialised at. */
   m_last_drop_tick = m_last_move_tick = SDL_GetTicks();
 
@@ -232,70 +236,12 @@ void game_init( void )
 
 void game_event( const SDL_Event *p_event )
 {
-  uint_fast32_t l_current_tick = SDL_GetTicks();
-  uint_fast8_t  l_new_rotation;
-  SDL_Point     l_new_location;
-
-  /* Consider the type of event we have. */
+  /* If it's a keypress, set the current command to this; yes, if the user */
+  /* presses multiple keys in the same frame, we may drop some. So, maybe  */
+  /* don't do that?!                                                       */
   if ( p_event->type == SDL_KEYDOWN )
   {
-    switch( p_event->key.keysym.sym )
-    {
-      case SDLK_COMMA:                                      /* Move left. */
-      case SDLK_LEFT:
-        /* Only attempt the move every TRIX_MOVE_MS milliseconds. */
-        if ( l_current_tick > ( m_last_move_tick + TRIX_MOVE_MS ) )
-        {
-          /* Work out the new position. */
-          l_new_location.x = m_current_location.x - 1;
-          l_new_location.y = m_current_location.y;
-
-          /* Check that we'll fit. */
-          if ( game_check_space( &m_current_piece, m_current_rotation, l_new_location ) )
-          {
-            m_current_location.x = l_new_location.x;
-            m_last_move_tick = l_current_tick;
-          }
-        }
-        break;
-      case SDLK_SLASH:                                     /* Move right. */
-      case SDLK_RIGHT:
-        /* Only attempt the move every TRIX_MOVE_MS milliseconds. */
-        if ( l_current_tick > ( m_last_move_tick + TRIX_MOVE_MS ) )
-        {
-          /* Work out the new position. */
-          l_new_location.x = m_current_location.x + 1;
-          l_new_location.y = m_current_location.y;
-
-          /* Check that we'll fit. */
-          if ( game_check_space( &m_current_piece, m_current_rotation, l_new_location ) )
-          {
-            m_current_location.x = l_new_location.x;
-            m_last_move_tick = l_current_tick;
-          }
-        }
-        break;
-      case SDLK_PERIOD:                                        /* Rotate. */
-      case SDLK_UP:
-        /* Only attempt the move every TRIX_MOVE_MS milliseconds. */
-        if ( l_current_tick > ( m_last_move_tick + TRIX_MOVE_MS ) )
-        {
-          /* Work out the new position. */
-          l_new_rotation = m_current_rotation >= 3 ? 0 : m_current_rotation+1;
-
-          /* Check that we'll fit. */
-          if ( game_check_space( &m_current_piece, l_new_rotation, m_current_location ) )
-          {
-            m_current_rotation = l_new_rotation;
-            m_last_move_tick = l_current_tick;
-          }
-        }
-        break;
-
-      case SDLK_SPACE:                                           /* Drop. */
-        m_dropping = true;
-        break;
-    }
+    m_current_cmd = p_event->key.keysym.sym;
   }
 
   /* All done. */
@@ -311,7 +257,70 @@ void game_event( const SDL_Event *p_event )
 trix_engine_t game_update( void )
 {
   uint_fast32_t l_current_tick = SDL_GetTicks();
+  uint_fast8_t  l_new_rotation;
   SDL_Point     l_new_location;
+
+  /* Process any queued key command. */
+  switch( m_current_cmd )
+  {
+    case SDLK_COMMA:                                      /* Move left. */
+    case SDLK_LEFT:
+      /* Only attempt the move every TRIX_MOVE_MS milliseconds. */
+      if ( l_current_tick > ( m_last_move_tick + TRIX_MOVE_MS ) )
+      {
+        /* Work out the new position. */
+        l_new_location.x = m_current_location.x - 1;
+        l_new_location.y = m_current_location.y;
+
+        /* Check that we'll fit. */
+        if ( game_check_space( &m_current_piece, m_current_rotation, l_new_location ) )
+        {
+          m_current_location.x = l_new_location.x;
+          m_last_move_tick = l_current_tick;
+        }
+      }
+      break;
+    case SDLK_SLASH:                                     /* Move right. */
+    case SDLK_RIGHT:
+      /* Only attempt the move every TRIX_MOVE_MS milliseconds. */
+      if ( l_current_tick > ( m_last_move_tick + TRIX_MOVE_MS ) )
+      {
+        /* Work out the new position. */
+        l_new_location.x = m_current_location.x + 1;
+        l_new_location.y = m_current_location.y;
+
+        /* Check that we'll fit. */
+        if ( game_check_space( &m_current_piece, m_current_rotation, l_new_location ) )
+        {
+          m_current_location.x = l_new_location.x;
+          m_last_move_tick = l_current_tick;
+        }
+      }
+      break;
+    case SDLK_PERIOD:                                        /* Rotate. */
+    case SDLK_UP:
+      /* Only attempt the move every TRIX_MOVE_MS milliseconds. */
+      if ( l_current_tick > ( m_last_move_tick + TRIX_MOVE_MS ) )
+      {
+        /* Work out the new position. */
+        l_new_rotation = m_current_rotation >= 3 ? 0 : m_current_rotation+1;
+
+        /* Check that we'll fit. */
+        if ( game_check_space( &m_current_piece, l_new_rotation, m_current_location ) )
+        {
+          m_current_rotation = l_new_rotation;
+          m_last_move_tick = l_current_tick;
+        }
+      }
+      break;
+
+    case SDLK_SPACE:                                           /* Drop. */
+      m_dropping = true;
+      break;
+  }
+
+  /* Clear any current command, for the next input. */
+  m_current_cmd = SDLK_UNKNOWN;
 
   /* If it's time to drop the current piece another line, do so. */
   if ( ( l_current_tick >= ( m_last_drop_tick + m_drop_speed ) ) ||
