@@ -256,6 +256,8 @@ void game_event( const SDL_Event *p_event )
 
 trix_engine_t game_update( void )
 {
+  uint_fast8_t  l_index, l_column, l_row;
+  bool          l_line_complete;
   uint_fast32_t l_current_tick = SDL_GetTicks();
   uint_fast8_t  l_new_rotation;
   SDL_Point     l_new_location;
@@ -341,6 +343,43 @@ trix_engine_t game_update( void )
       /* It doesn't fit, so transfer it to the board, and spawn a fresh piece. */
       game_copy_to_board( &m_current_piece, m_current_rotation, m_current_location );
       m_current_piece.piece = PIECE_NONE;
+
+      /* This is probably a good time to check for any completed lines. */
+      for ( l_row = TRIX_BOARD_HEIGHT - 1; l_row > 0; l_row-- )
+      {
+        /* Look for any empty blocks in the line. */
+        l_line_complete = true;
+        for ( l_column = 0; l_column < m_board_width; l_column++ )
+        {
+          if ( m_board[l_column][l_row] == PIECE_NONE )
+          {
+            l_line_complete = false;
+            break;
+          }
+        }
+
+        /* If that line is complete, blank it and drop everything above it down. */
+        if ( l_line_complete )
+        {
+          /* Go over every line. */
+          for ( l_index = l_row; l_index > 0; l_index-- )
+          {
+            for ( l_column = 0; l_column < m_board_width; l_column++ )
+            {
+              m_board[l_column][l_index] = m_board[l_column][l_index-1];
+            }
+          }
+
+          /* Blank the top row. */
+          for ( l_column = 0; l_column < m_board_width; l_column++ )
+          {
+            m_board[l_column][0] = PIECE_NONE;
+          }
+
+          /* And check the newly dropped line. */
+          l_row++;
+        }
+      }
     }
   }
 
