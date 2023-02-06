@@ -174,6 +174,9 @@ int main( int argc, char **argv )
   /* Set up the display. */
   if ( display_init() )
   {
+    /* Start up the text routines, used all over. */
+    text_init();
+
     /* Initialise the starting engine (display needs to be initialised first) */
     l_current_engine.init();
 
@@ -187,6 +190,9 @@ int main( int argc, char **argv )
     }
 #endif
 
+    /* Shut down the text engine. */
+    text_fini();
+    
     /* Lastly, tear down the display. */
     display_fini();
   }

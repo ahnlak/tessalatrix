@@ -206,6 +206,17 @@ SDL_Renderer *display_get_renderer( void )
 
 
 /*
+ * display_get_scale - exposes the current screen scale; not ideal, but some
+ *                     minor use cases make more sense to do it this way.
+ */
+
+uint_fast8_t display_get_scale( void )
+{
+  return m_resolutions[m_current_resolution].scale;
+}
+
+
+/*
  * display_scale_point - given a logical x, y co-ordinate, return an SDL_Point
  *                       that is scaled to the current screen resolution.
  *                       Note that this Point is a static, so should be copied

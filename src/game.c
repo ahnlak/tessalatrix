@@ -214,7 +214,7 @@ void game_init( void )
   /* Load up the sprite image (hopefully!) */
   if ( !game_load_sprites() )
   {
-    log_write( ERROR, "Failed to load menu sprites" );
+    log_write( ERROR, "Failed to load game sprites" );
   }
 
   /* Clear any current command. */
@@ -500,6 +500,13 @@ void game_render( void )
 
 void game_fini( void )
 {
+  /* Release any loaded textures. */
+  if ( m_sprite_texture != NULL )
+  {
+    SDL_DestroyTexture( m_sprite_texture );
+    m_sprite_texture = NULL;
+  }
+
   /* All done. */
   return;
 }

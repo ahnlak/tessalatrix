@@ -367,6 +367,13 @@ void menu_render( void )
 
 void menu_fini( void )
 {
+  /* Release any loaded textures. */
+  if ( m_sprite_texture != NULL )
+  {
+    SDL_DestroyTexture( m_sprite_texture );
+    m_sprite_texture = NULL;
+  }
+
   /* All done. */
   return;
 }
