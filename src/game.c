@@ -397,6 +397,12 @@ trix_engine_t game_update( void )
     m_current_location.y = -1;
     m_current_rotation = rand() % 4;
     m_dropping = false;
+
+    /* Now check to see if that fit; if it didn't, the game is over. */
+    if ( !game_check_space( &m_current_piece, m_current_rotation, m_current_location ) )
+    {
+      return ENGINE_MENU;
+    }
   }
 
   /* By default, ask to stay in our current engine. */
