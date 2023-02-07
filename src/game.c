@@ -33,6 +33,8 @@ static uint_fast32_t  m_drop_speed;
 
 static bool           m_dropping;
 static SDL_Keycode    m_current_cmd;
+static uint_fast16_t  m_score;
+static uint_fast16_t  m_lines;
 
 static uint_fast8_t   m_board_width;
 static trix_piece_t   m_board[TRIX_BOARD_WIDTH][TRIX_BOARD_HEIGHT];
@@ -128,6 +130,7 @@ static void game_init_board( void )
   /* Reset our game parameters. */
   m_drop_speed = TRIX_BASE_DROP_MS;
   m_dropping = false;
+  m_score = m_lines = 0;
 }
 
 
@@ -342,6 +345,7 @@ trix_engine_t game_update( void )
     {
       /* It doesn't fit, so transfer it to the board, and spawn a fresh piece. */
       game_copy_to_board( &m_current_piece, m_current_rotation, m_current_location );
+      m_score += m_current_piece.value;
       m_current_piece.piece = PIECE_NONE;
 
       /* This is probably a good time to check for any completed lines. */
@@ -377,6 +381,8 @@ trix_engine_t game_update( void )
           }
 
           /* And check the newly dropped line. */
+          m_lines++;
+          m_score += 10;
           l_row++;
         }
       }
@@ -482,6 +488,12 @@ void game_render( void )
                       &l_source_block, &l_target_block );
     }
   }
+
+  /* Scores next; shown to the right of the board. */
+  text_draw(  90, 10, "Score:" );
+  text_draw( 120, 10, "%05d", m_score );
+  text_draw(  90, 17, "Lines:" );
+  text_draw( 120, 17, "%d", m_lines );
 
   /* Finally, render the metrics count. */
   metrics_render();

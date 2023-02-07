@@ -36,7 +36,7 @@
 #define   TRIX_MENU_ENTRIES           5
 
 #define   TRIX_TEXT_FONT_START        32
-#define   TRIX_TEXT_FONT_LENGTH       94
+#define   TRIX_TEXT_FONT_LENGTH       95
 
 
 /* Asset locations. */

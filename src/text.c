@@ -115,7 +115,7 @@ void text_draw( uint_fast8_t p_x, uint_fast8_t p_y, const char *p_format, ... )
 
   /* Attempt to assemble the message into our buffer. */
   va_start( l_args, p_format );
-  l_msglen = snprintf( l_buffer, 64, p_format, l_args );
+  l_msglen = vsnprintf( l_buffer, 64, p_format, l_args );
   va_end( l_args );
 
   /* Now work out our starting point in screen co-ordinates. */
