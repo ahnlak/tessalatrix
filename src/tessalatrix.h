@@ -37,6 +37,8 @@
 
 #define   TRIX_TEXT_FONT_START        32
 #define   TRIX_TEXT_FONT_LENGTH       95
+#define   TRIX_NAMELEN_MAX            32
+#define   TRIX_HISCORE_COUNT          10
 
 
 /* Asset locations. */
@@ -47,6 +49,7 @@
 #define   TRIX_ASSET_MENU_SPRITES     "menu-sprites"
 #define   TRIX_ASSET_GAME_SPRITES     "game-sprites"
 #define   TRIX_ASSET_TEXT_SPRITES     "text-sprites"
+#define   TRIX_ASSET_HST_SPRITES      "hst-sprites"
 
 
 /* Enums. */
@@ -65,12 +68,12 @@ typedef enum
 
 typedef enum
 {
-  ENGINE_SPLASH, ENGINE_MENU, ENGINE_GAME, ENGINE_EXIT
+  ENGINE_SPLASH, ENGINE_MENU, ENGINE_HSTABLE, ENGINE_GAME, ENGINE_OVER, ENGINE_EXIT
 } trix_engine_t;
 
 typedef enum
 {
-  GAME_MODE_STANDARD
+  GAME_MODE_STANDARD, GAME_MODE_MAX
 } trix_gamemode_t;
 
 typedef enum
@@ -122,6 +125,13 @@ typedef struct {
   SDL_Point     blocks[4][5];
 } trix_piece_st;
 
+typedef struct {
+  uint_fast16_t score;
+  uint_fast16_t lines;
+  time_t        datestamp;
+  char          name[TRIX_NAMELEN_MAX+1];
+} trix_hiscore_st;
+
 
 /* Prototypes. */
 
@@ -145,6 +155,15 @@ void          game_event( const SDL_Event * );
 trix_engine_t game_update( void );
 void          game_render( void );
 void          game_fini( void );
+
+const trix_hiscore_st *hiscore_read( trix_gamemode_t );
+bool                   hiscore_save( trix_gamemode_t, uint_fast16_t, uint_fast16_t, const char * );
+
+void          hstable_init( void );
+void          hstable_event( const SDL_Event * );
+trix_engine_t hstable_update( void );
+void          hstable_render( void );
+void          hstable_fini( void );
 
 bool          log_init( void );
 bool          log_write( trix_loglevel_t, const char *, ... );

@@ -89,7 +89,7 @@ void main_loop( void *p_arg )
         l_current_engine->fini   = menu_fini;
         break;
 
-      case ENGINE_GAME:       /* Render the game to the user. */
+      case ENGINE_GAME:            /* Render the game to the user. */
         l_current_engine->type   = ENGINE_GAME;
         l_current_engine->init   = game_init;
         l_current_engine->event  = game_event;
@@ -98,7 +98,16 @@ void main_loop( void *p_arg )
         l_current_engine->fini   = game_fini;
         break;
 
-      case ENGINE_EXIT:       /* We want to exit the game now. */
+      case ENGINE_HSTABLE:  /* Render the high scores to the user. */
+        l_current_engine->type   = ENGINE_HSTABLE;
+        l_current_engine->init   = hstable_init;
+        l_current_engine->event  = hstable_event;
+        l_current_engine->update = hstable_update;
+        l_current_engine->render = hstable_render;
+        l_current_engine->fini   = hstable_fini;
+        break;
+
+      case ENGINE_EXIT:           /* We want to exit the game now. */
       default:
         l_current_engine->running = false;
         return;

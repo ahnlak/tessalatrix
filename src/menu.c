@@ -148,6 +148,7 @@ void menu_init( void )
     m_option_enabled[l_index] = true;
   }
   m_option_enabled[1] = false;
+  m_option_enabled[3] = false;
 
   /* Remember what tick we were initialised at. */
   m_blink_tick = m_last_move_tick = SDL_GetTicks();
@@ -290,6 +291,9 @@ trix_engine_t menu_update( void )
       {
         case 0:   /* New Game. */
           return ENGINE_GAME;
+          break;
+        case 2:   /* New Game. */
+          return ENGINE_HSTABLE;
           break;
         case 4:   /* Exit. */
           return ENGINE_EXIT;
