@@ -212,8 +212,22 @@ void hstable_render( void )
   for ( l_index = 0; l_index < TRIX_HISCORE_COUNT; l_index++ )
   {
     text_draw(  20, 20 + ( l_index * 7 ), m_table[l_index].name );
-    text_draw(  90, 20 + ( l_index * 7 ), "%5d", m_table[l_index].score );
-    text_draw( 130, 20 + ( l_index * 7 ), "%4d", m_table[l_index].lines );
+    if ( m_table[l_index].score > 0 )
+    {
+      text_draw_to( 102, 20 + ( l_index * 7 ), "%5d", m_table[l_index].score );
+    }
+    else
+    {
+      text_draw_to( 102, 20 + ( l_index * 7 ), "--" );
+    }
+    if ( m_table[l_index].lines > 0 )
+    {
+      text_draw_to( 137, 20 + ( l_index * 7 ), "%4d", m_table[l_index].lines );
+    }
+    else
+    {
+      text_draw_to( 137, 20 + ( l_index * 7 ), "-" );
+    }      
   }
 
   /* Finally, render the metrics count. */

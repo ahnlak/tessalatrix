@@ -190,6 +190,7 @@ void          splash_fini( void );
 
 void          text_init( void );
 void          text_draw( uint_fast8_t, uint_fast8_t, const char *, ... );
+void          text_draw_to( uint_fast8_t, uint_fast8_t, const char *, ... );
 void          text_fini( void );
 
 const char   *util_app_name( void );
