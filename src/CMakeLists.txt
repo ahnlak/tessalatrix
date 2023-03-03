@@ -6,7 +6,7 @@ set(APP_NAME tessalatrix)
 add_executable(
   ${APP_NAME}
   config.c display.c game.c hiscore.c hstable.c log.c menu.c metrics.c
-  piece.c splash.c tessalatrix.c text.c util.c
+  over.c piece.c splash.c tessalatrix.c text.c util.c
 )
 
 # Make sure it's built in the top level directory

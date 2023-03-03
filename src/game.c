@@ -23,33 +23,32 @@
 
 /* Module variables. */
 
-static SDL_Texture   *m_sprite_texture;
-static uint_fast8_t   m_sprite_scale;
+static SDL_Texture       *m_sprite_texture;
+static uint_fast8_t       m_sprite_scale;
 
-static uint_fast32_t  m_last_move_tick;
-static uint_fast32_t  m_last_drop_tick;
+static uint_fast32_t      m_last_move_tick;
+static uint_fast32_t      m_last_drop_tick;
 
-static uint_fast32_t  m_drop_speed;
+static uint_fast32_t      m_drop_speed;
 
-static bool           m_dropping;
-static SDL_Keycode    m_current_cmd;
-static uint_fast16_t  m_score;
-static uint_fast16_t  m_lines;
+static bool               m_dropping;
+static SDL_Keycode        m_current_cmd;
 
-static uint_fast8_t   m_board_width;
-static trix_piece_t   m_board[TRIX_BOARD_WIDTH][TRIX_BOARD_HEIGHT];
-static trix_piece_st  m_current_piece;
-static SDL_Point      m_current_location;
-static uint_fast8_t   m_current_rotation;
-static SDL_Rect       m_sprite_rect_title;
-static SDL_Rect       m_border_bl_src_rect;
-static SDL_Rect       m_border_base_src_rect;
-static SDL_Rect       m_border_br_src_rect;
-static SDL_Rect       m_border_left_src_rect;
-static SDL_Rect       m_border_right_src_rect;
+static trix_gamestate_st  m_game_state;
 
-static SDL_Rect       m_border_bl_target_rect;
-static SDL_Rect       m_border_br_target_rect;
+static trix_piece_st      m_current_piece;
+static SDL_Point          m_current_location;
+static uint_fast8_t       m_current_rotation;
+
+static SDL_Rect           m_sprite_rect_title;
+static SDL_Rect           m_border_bl_src_rect;
+static SDL_Rect           m_border_base_src_rect;
+static SDL_Rect           m_border_br_src_rect;
+static SDL_Rect           m_border_left_src_rect;
+static SDL_Rect           m_border_right_src_rect;
+
+static SDL_Rect           m_border_bl_target_rect;
+static SDL_Rect           m_border_br_target_rect;
 
 
 /*
@@ -98,7 +97,7 @@ static bool game_load_sprites( void )
           display_scale_rect_to_screen( 0, 105, 5, 5 ), 
           sizeof( SDL_Rect ) );  
   memcpy( &m_border_br_target_rect,
-          display_scale_rect_to_screen( 5 * ( m_board_width+1 ), 105, 5, 5 ), 
+          display_scale_rect_to_screen( 5 * ( m_game_state.board_width+1 ), 105, 5, 5 ), 
           sizeof( SDL_Rect ) );  
 
   /* All done! */
@@ -117,20 +116,20 @@ static void game_init_board( void )
   uint_fast8_t l_row, l_column;
 
   /* For now, we only understand four-block pieces. */
-  m_board_width = 10;
+  m_game_state.board_width = 10;
 
   for ( l_row = 0; l_row < TRIX_BOARD_HEIGHT; l_row++ )
   {
-    for ( l_column = 0; l_column < m_board_width; l_column++ )
+    for ( l_column = 0; l_column < m_game_state.board_width; l_column++ )
     {
-      m_board[l_column][l_row] = PIECE_NONE;
+      m_game_state.board[l_column][l_row] = PIECE_NONE;
     }
   }
 
   /* Reset our game parameters. */
   m_drop_speed = TRIX_BASE_DROP_MS;
   m_dropping = false;
-  m_score = m_lines = 0;
+  m_game_state.score = m_game_state.lines = 0;
 }
 
 
@@ -154,13 +153,13 @@ static bool game_check_space( const trix_piece_st *p_piece, uint_fast8_t p_rotat
 
     /* Check that we're not off the board. */
     if ( ( l_block_loc.y >= TRIX_BOARD_HEIGHT ) ||
-         ( l_block_loc.x < 0 ) || ( l_block_loc.x >= m_board_width ) )
+         ( l_block_loc.x < 0 ) || ( l_block_loc.x >= m_game_state.board_width ) )
     {
       return false;
     }
 
     /* Check to see if the board is occupied, but ignore space above. */
-    if ( ( l_block_loc.y >= 0 ) && ( m_board[l_block_loc.x][l_block_loc.y] != PIECE_NONE ) )
+    if ( ( l_block_loc.y >= 0 ) && ( m_game_state.board[l_block_loc.x][l_block_loc.y] != PIECE_NONE ) )
     {
       return false;
     }
@@ -195,7 +194,7 @@ static bool game_copy_to_board( const trix_piece_st *p_piece, uint_fast8_t p_rot
     l_block_loc.y = p_location.y + p_piece->blocks[p_rotation][l_index].y;
 
     /* And add it to the board. */
-    m_board[l_block_loc.x][l_block_loc.y] = p_piece->piece;
+    m_game_state.board[l_block_loc.x][l_block_loc.y] = p_piece->piece;
   }
 
   /* All good then! */
@@ -345,7 +344,7 @@ trix_engine_t game_update( void )
     {
       /* It doesn't fit, so transfer it to the board, and spawn a fresh piece. */
       game_copy_to_board( &m_current_piece, m_current_rotation, m_current_location );
-      m_score += m_current_piece.value;
+      m_game_state.score += m_current_piece.value;
       m_current_piece.piece = PIECE_NONE;
 
       /* This is probably a good time to check for any completed lines. */
@@ -353,9 +352,9 @@ trix_engine_t game_update( void )
       {
         /* Look for any empty blocks in the line. */
         l_line_complete = true;
-        for ( l_column = 0; l_column < m_board_width; l_column++ )
+        for ( l_column = 0; l_column < m_game_state.board_width; l_column++ )
         {
-          if ( m_board[l_column][l_row] == PIECE_NONE )
+          if ( m_game_state.board[l_column][l_row] == PIECE_NONE )
           {
             l_line_complete = false;
             break;
@@ -368,21 +367,21 @@ trix_engine_t game_update( void )
           /* Go over every line. */
           for ( l_index = l_row; l_index > 0; l_index-- )
           {
-            for ( l_column = 0; l_column < m_board_width; l_column++ )
+            for ( l_column = 0; l_column < m_game_state.board_width; l_column++ )
             {
-              m_board[l_column][l_index] = m_board[l_column][l_index-1];
+              m_game_state.board[l_column][l_index] = m_game_state.board[l_column][l_index-1];
             }
           }
 
           /* Blank the top row. */
-          for ( l_column = 0; l_column < m_board_width; l_column++ )
+          for ( l_column = 0; l_column < m_game_state.board_width; l_column++ )
           {
-            m_board[l_column][0] = PIECE_NONE;
+            m_game_state.board[l_column][0] = PIECE_NONE;
           }
 
           /* And check the newly dropped line. */
-          m_lines++;
-          m_score += 10;
+          m_game_state.lines++;
+          m_game_state.score += 10;
           l_row++;
         }
       }
@@ -393,7 +392,7 @@ trix_engine_t game_update( void )
   if ( m_current_piece.piece == PIECE_NONE )
   {
     memcpy( &m_current_piece, piece_select( GAME_MODE_STANDARD ), sizeof( trix_piece_st ) );
-    m_current_location.x = ( m_board_width / 2 ) - 1;
+    m_current_location.x = ( m_game_state.board_width / 2 ) - 1;
     m_current_location.y = -1;
     m_current_rotation = rand() % 4;
     m_dropping = false;
@@ -401,7 +400,7 @@ trix_engine_t game_update( void )
     /* Now check to see if that fit; if it didn't, the game is over. */
     if ( !game_check_space( &m_current_piece, m_current_rotation, m_current_location ) )
     {
-      return ENGINE_MENU;
+      return ENGINE_OVER;
     }
   }
 
@@ -430,7 +429,7 @@ void game_render( void )
   SDL_RenderCopy( display_get_renderer(), m_sprite_texture, &m_border_br_src_rect, &m_border_br_target_rect );
 
   /* And the bottom line next. */
-  for( l_index = 1; l_index <= m_board_width; l_index++ )
+  for( l_index = 1; l_index <= m_game_state.board_width; l_index++ )
   {
     SDL_RenderCopy( display_get_renderer(), m_sprite_texture, &m_border_base_src_rect,
                     display_scale_rect_to_screen( 5 * l_index, 105, 5, 5 ) );
@@ -442,13 +441,13 @@ void game_render( void )
     SDL_RenderCopy( display_get_renderer(), m_sprite_texture, &m_border_left_src_rect,
                     display_scale_rect_to_screen( 0, 105 - ( 5 * l_index ), 5, 5 ) );
     SDL_RenderCopy( display_get_renderer(), m_sprite_texture, &m_border_right_src_rect,
-                    display_scale_rect_to_screen( 5 * ( m_board_width+1 ), 105 - ( 5 * l_index ), 5, 5 ) );
+                    display_scale_rect_to_screen( 5 * ( m_game_state.board_width+1 ), 105 - ( 5 * l_index ), 5, 5 ) );
   }
 
   /* Now, run through the board and render any blocks. */
   for ( l_row = 0; l_row < TRIX_BOARD_HEIGHT; l_row++ )
   {
-    for ( l_column = 0; l_column < m_board_width; l_column++ )
+    for ( l_column = 0; l_column < m_game_state.board_width; l_column++ )
     {
       /* Precalculate the destination rectangle. */
       memcpy( &l_target_block, 
@@ -456,11 +455,11 @@ void game_render( void )
               sizeof( SDL_Rect ) );
 
       /* All the four-piece blocks are in a simply addressable row. */
-      if ( ( m_board[l_column][l_row] > PIECE_4_MIN ) && 
-           ( m_board[l_column][l_row] < PIECE_4_MAX ) )
+      if ( ( m_game_state.board[l_column][l_row] > PIECE_4_MIN ) && 
+           ( m_game_state.board[l_column][l_row] < PIECE_4_MAX ) )
       {
         SDL_RenderCopy( display_get_renderer(), m_sprite_texture, 
-                        display_scale_rect_to_scale( 5 * ( m_board[l_column][l_row] - PIECE_4_MIN - 1 ), 0, 5, 5, m_sprite_scale ), 
+                        display_scale_rect_to_scale( 5 * ( m_game_state.board[l_column][l_row] - PIECE_4_MIN - 1 ), 0, 5, 5, m_sprite_scale ), 
                         &l_target_block );
       }
     }
@@ -497,9 +496,9 @@ void game_render( void )
 
   /* Scores next; shown to the right of the board. */
   text_draw(  90, 10, "Score:" );
-  text_draw( 120, 10, "%05d", m_score );
+  text_draw( 120, 10, "%05d", m_game_state.score );
   text_draw(  90, 17, "Lines:" );
-  text_draw( 120, 17, "%d", m_lines );
+  text_draw( 120, 17, "%d", m_game_state.lines );
 
   /* Finally, render the metrics count. */
   metrics_render();
@@ -527,6 +526,17 @@ void game_fini( void )
 
   /* All done. */
   return;
+}
+
+
+/*
+ * state - returns a pointer to our internal gamestate; useful for post-game
+ *         work.
+ */
+
+const trix_gamestate_st *game_state( void )
+{
+  return &m_game_state;
 }
 
 

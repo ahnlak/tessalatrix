@@ -178,6 +178,59 @@ void text_draw_to( uint_fast8_t p_x, uint_fast8_t p_y, const char *p_format, ...
 
 
 /*
+ * draw_around - draws the provided printf-style string to the streen, centered
+ *               on the provided (logical, not physical) co-ordinates.
+ */
+
+void text_draw_around( uint_fast8_t p_x, uint_fast8_t p_y, const char *p_format, ... )
+{
+  uint_fast8_t  l_index;
+  int           l_msglen;
+  char          l_buffer[64];
+  va_list       l_args;
+  SDL_Rect      l_target_rect;
+  SDL_Point     l_string_size;
+
+  /* Attempt to assemble the message into our buffer. */
+  va_start( l_args, p_format );
+  l_msglen = vsnprintf( l_buffer, 64, p_format, l_args );
+  va_end( l_args );
+
+  /* First step then is to work out the size of our rendered string. */
+  l_string_size.y = 5;
+  l_string_size.x = 0;
+  for ( l_index = 0; l_index < l_msglen; l_index++ )
+  {
+    l_string_size.x += m_char_widths[l_buffer[l_index]-TRIX_TEXT_FONT_START];
+  }  
+
+  /* Now work out our starting point in screen co-ordinates. */
+  memcpy( &l_target_rect, 
+          display_scale_rect_to_screen( 
+            p_x - ( l_string_size.x / 2 ),
+            p_y - ( l_string_size.y / 2 ),
+            5, 5 
+          ), 
+          sizeof( SDL_Rect ) );
+
+  /* And work through the buffer blitting one letter at a time. */
+  for ( l_index = 0; l_index < l_msglen; l_index++ )
+  {
+    /* Write out the letter. */
+    SDL_RenderCopy( display_get_renderer(), m_sprite_texture,
+                    &m_char_src_rect[l_buffer[l_index]-TRIX_TEXT_FONT_START],
+                    &l_target_rect );
+
+    /* Move forward an appropriate amount - note we do no wrapping! */
+    l_target_rect.x += ( m_char_widths[l_buffer[l_index]-TRIX_TEXT_FONT_START] * display_get_scale() );
+  }
+
+  /* All done. */
+  return;
+}
+
+
+/*
  * fini - release any allocated resources.
  */
 

@@ -48,8 +48,11 @@
 #define   TRIX_ASSET_METRICS_SPRITES  "metrics-sprites"
 #define   TRIX_ASSET_MENU_SPRITES     "menu-sprites"
 #define   TRIX_ASSET_GAME_SPRITES     "game-sprites"
+#define   TRIX_ASSET_OVER_SPRITES     "over-sprites"
 #define   TRIX_ASSET_TEXT_SPRITES     "text-sprites"
 #define   TRIX_ASSET_HST_SPRITES      "hst-sprites"
+
+#define   TRIX_HISCORE_FILENAME       "hst.dat"
 
 
 /* Enums. */
@@ -132,6 +135,14 @@ typedef struct {
   char          name[TRIX_NAMELEN_MAX+1];
 } trix_hiscore_st;
 
+typedef struct {
+  trix_gamemode_t mode;
+  uint_fast16_t   score;
+  uint_fast16_t   lines;
+  uint_fast8_t    board_width;
+  trix_piece_t    board[TRIX_BOARD_WIDTH][TRIX_BOARD_HEIGHT];
+} trix_gamestate_st;
+
 
 /* Prototypes. */
 
@@ -155,6 +166,8 @@ void          game_event( const SDL_Event * );
 trix_engine_t game_update( void );
 void          game_render( void );
 void          game_fini( void );
+const trix_gamestate_st *game_state( void );
+
 
 const trix_hiscore_st *hiscore_read( trix_gamemode_t );
 bool                   hiscore_save( trix_gamemode_t, uint_fast16_t, uint_fast16_t, const char * );
@@ -180,6 +193,12 @@ void          metrics_toggle( void );
 void          metrics_update( void );
 void          metrics_render( void );
 
+void          over_init( void );
+void          over_event( const SDL_Event * );
+trix_engine_t over_update( void );
+void          over_render( void );
+void          over_fini( void );
+
 const trix_piece_st *piece_select( trix_gamemode_t );
 
 void          splash_init( void );
@@ -191,6 +210,7 @@ void          splash_fini( void );
 void          text_init( void );
 void          text_draw( uint_fast8_t, uint_fast8_t, const char *, ... );
 void          text_draw_to( uint_fast8_t, uint_fast8_t, const char *, ... );
+void          text_draw_around( uint_fast8_t, uint_fast8_t, const char *, ... );
 void          text_fini( void );
 
 const char   *util_app_name( void );

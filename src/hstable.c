@@ -215,17 +215,11 @@ void hstable_render( void )
     if ( m_table[l_index].score > 0 )
     {
       text_draw_to( 102, 20 + ( l_index * 7 ), "%5d", m_table[l_index].score );
-    }
-    else
-    {
-      text_draw_to( 102, 20 + ( l_index * 7 ), "--" );
-    }
-    if ( m_table[l_index].lines > 0 )
-    {
       text_draw_to( 137, 20 + ( l_index * 7 ), "%4d", m_table[l_index].lines );
     }
     else
     {
+      text_draw_to( 102, 20 + ( l_index * 7 ), "--" );
       text_draw_to( 137, 20 + ( l_index * 7 ), "-" );
     }      
   }
