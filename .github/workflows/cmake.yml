@@ -29,6 +29,11 @@ jobs:
             cmake-prefix:   emcmake
             make-prefix:    emmake
             apt-packages:   
+          - os:             windows-latest
+            name:           Visual Studio
+            cmake-prefix:
+            make-prefix:
+            apt-packages:
 
     runs-on: ${{matrix.os}}
 
