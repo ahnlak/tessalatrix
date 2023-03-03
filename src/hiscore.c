@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 
@@ -131,7 +132,7 @@ bool hiscore_save( trix_gamemode_t p_mode, uint_fast16_t p_score,
   m_hiscores[p_mode][l_entry].lines = p_lines;
   m_hiscores[p_mode][l_entry].datestamp = time(NULL);
   strncpy( m_hiscores[p_mode][l_entry].name, p_name, TRIX_NAMELEN_MAX );
-  m_hiscores[p_mode][l_entry].name[TRIX_PATH_MAX] = '\0';
+  m_hiscores[p_mode][l_entry].name[TRIX_NAMELEN_MAX] = '\0';
 
   /* Lastly, write out the whole high score table. */
   l_table_fptr = fopen( TRIX_HISCORE_FILENAME, "w" );
