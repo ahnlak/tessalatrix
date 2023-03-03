@@ -1,8 +1,8 @@
 # Workflow to build Tessalatrix cross-platform, and pull together release
 # packages automagically.
 #
-# For now, we only build a Linux/SDL target, but via a matrix so that in 
-# future we can support multiple targets
+# For now, we build a Windows, Linux and emscripten target, but via a matrix
+# so that in future we can support multiple targets.
 
 name: CMake
 
@@ -24,16 +24,19 @@ jobs:
             cmake-prefix:
             make-prefix:
             apt-packages:   libsdl2-dev libsdl2-image-dev
+            cmake-args:
           - os:             ubuntu-20.04
             name:           Emscripten
             cmake-prefix:   emcmake
             make-prefix:    emmake
             apt-packages:   
+            cmake-args:
           - os:             windows-latest
             name:           Visual Studio
             cmake-prefix:
             make-prefix:
             apt-packages:
+            cmake-args:     -DSDL2_DIR=$GITHUB_WORKSPACE/vs/sdl
 
     runs-on: ${{matrix.os}}
 
@@ -63,11 +66,10 @@ jobs:
 
     # Configure cmake
     - name: Configure CMake
-      run:  ${{matrix.cmake-prefix}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run:  ${{matrix.cmake-prefix}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{matrix.cmake-args}}
 
     # Run the build
     - name: Build
-      if:   runner.os == 'Linux'
       run:  cd ${{github.workspace}}/build && ${{matrix.make-prefix}} make
 
     # On releases, get cmake to build the packages
