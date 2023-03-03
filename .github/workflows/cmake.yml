@@ -64,7 +64,7 @@ jobs:
     # Configure cmake, either for Windows or not (yes, it's ugly)
     - name: Configure CMake (Windows)
       if: runner.os == 'Windows'
-      run:  ${{matrix.cmake-prefix}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DSDL2_DIR=${{github.workspace}}/vs/sdl
+      run:  ${{matrix.cmake-prefix}} cmake -G 'Unix Makefiles' -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DSDL2_DIR=${{github.workspace}}/vs/sdl
 
     - name: Configure CMake (Non-Windows)
       if: runner.os != 'Windows'
