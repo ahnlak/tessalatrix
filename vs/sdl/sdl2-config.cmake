@@ -19,7 +19,6 @@ endfunction(fetch_sdl2_library)
 
 set(SDL2_VERSION 2.24.0)
 set(SDL2_IMAGE_VERSION 2.6.2)
-set(SDL2_NET_VERSION 2.2.0)
 
 if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -37,13 +36,6 @@ if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/include)
         4111affcca1f4b41c2f4b4c445ccf06fe081b5e9
     )
 
-    fetch_sdl2_library(
-        SDL2_net-${SDL2_NET_VERSION}
-        https://github.com/libsdl-org/SDL_net/releases/download/release-${SDL2_NET_VERSION}/
-        SDL2_net-devel-${SDL2_NET_VERSION}-VC.zip
-        c8ff358a5c8338002b05ab6de7ce91ee1c86bd45
-    )
-
 endif()
 
 include(${CMAKE_CURRENT_LIST_DIR}/SDL2-${SDL2_VERSION}/cmake/sdl2-config.cmake)
@@ -51,4 +43,3 @@ get_property(SDL2_DLL TARGET SDL2::SDL2 PROPERTY IMPORTED_LOCATION)
 
 # help cmake to find the other libs
 set(SDL2_image_DIR ${CMAKE_CURRENT_LIST_DIR}/SDL2_image-${SDL2_IMAGE_VERSION}/cmake)
-set(SDL2_net_DIR ${CMAKE_CURRENT_LIST_DIR}/SDL2_net-${SDL2_NET_VERSION}/cmake)

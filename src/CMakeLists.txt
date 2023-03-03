@@ -91,14 +91,25 @@ target_link_libraries(${APP_NAME} PRIVATE "${SDL2_LIBRARIES}" "${SDL2_IMAGE_LIBR
 
 # And set the built app as an install target
 if(EMSCRIPTEN)
+
   install(FILES 
     ${PROJECT_BINARY_DIR}/${APP_NAME}.data
     ${PROJECT_BINARY_DIR}/${APP_NAME}.js 
     ${PROJECT_BINARY_DIR}/${APP_NAME}.wasm
     DESTINATION .
   )
+
+elseif(WIN32)
+
+  install(FILES
+    ${SDL2_DLL} ${SDL2_IMAGE_DLL}
+    DESTINATION .
+  )
+
 else()
+
   install(DIRECTORY "${PROJECT_BINARY_DIR}/assets" DESTINATION . FILES_MATCHING PATTERN "*.png")
+
 endif()
 
 install(TARGETS ${APP_NAME} DESTINATION .)
