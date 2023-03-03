@@ -112,6 +112,9 @@ const trix_piece_st *piece_select( trix_gamemode_t p_mode )
       case GAME_MODE_STANDARD:
         l_good_pick = true;
         break;
+      default:
+        log_write( ERROR, "Invalid game mode in piece_select()" );
+        break;
     }
   }
   while( !l_good_pick );

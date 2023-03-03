@@ -242,8 +242,6 @@ trix_engine_t over_update( void )
 
 void over_render( void )
 {
-  uint_fast8_t              l_index;
-
   /* Clear to black. */
   SDL_SetRenderDrawColor( display_get_renderer(), 0, 0, 0, 255 );
   SDL_RenderClear( display_get_renderer() );

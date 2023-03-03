@@ -73,7 +73,7 @@ bool log_write( trix_loglevel_t p_level, const char * p_message, ... )
   va_list     l_args;
 
   /* If the message log level is *above* the system's level, do nothing. */
-  if ( p_level > config_get_int( CONF_LOG_LEVEL ) )
+  if ( p_level > (trix_loglevel_t)config_get_int( CONF_LOG_LEVEL ) )
   {
     return true;
   }

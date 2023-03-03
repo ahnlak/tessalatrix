@@ -48,30 +48,6 @@ static SDL_Renderer  *m_renderer;
  * Static functions; a collection of things only built for use locally.
  */
 
-/*
- * display_fits_inside - given two rectangles, returns true if rectangle A fits
- *                       inside rectangle B and false if not.
- */
-
-static bool display_fits_inside( const SDL_Rect *p_rect_a, const SDL_Rect *p_rect_b )
-{
-  /* Check the top left corner. */
-  if ( ( p_rect_a->x < p_rect_b->x ) || ( p_rect_a->y < p_rect_b->y ) )
-  {
-    return false;
-  }
-
-  /* And the bottom right, taking into account any x/y offset. */
-  if ( ( ( p_rect_a->x + p_rect_a->w ) > ( p_rect_b->x + p_rect_b->w ) ) || 
-       ( ( p_rect_a->y + p_rect_a->h ) > ( p_rect_b->y + p_rect_b->h ) ) )
-  {
-    return false;
-  }
-
-  /* Good, then he fits! */
-  return true;
-}
-
 
 /* Functions. */
 

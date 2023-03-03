@@ -40,7 +40,6 @@ static trix_piece_st      m_current_piece;
 static SDL_Point          m_current_location;
 static uint_fast8_t       m_current_rotation;
 
-static SDL_Rect           m_sprite_rect_title;
 static SDL_Rect           m_border_bl_src_rect;
 static SDL_Rect           m_border_base_src_rect;
 static SDL_Rect           m_border_br_src_rect;

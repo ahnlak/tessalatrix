@@ -13,7 +13,9 @@ which I spent *way* too much of my student days playing, in terms of pacing,
 scoring and the extended tile sets.
 
 Ultimately, I aim to be able to target multiple platforms (Linux & Windows
-definitely, Web and even MacOS ideally) with a common code base. For the
-purposes of development, Actions are building Linux and Web targets.
+definitely, Web and even MacOS ideally) with a common code base. At the time
+of writing, automated builds target Linux, Windows and Web.
 
 As always, this is all released under the MIT License.
+
+Share And Enjoy

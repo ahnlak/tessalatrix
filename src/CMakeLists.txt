@@ -9,15 +9,14 @@ add_executable(
   over.c piece.c splash.c tessalatrix.c text.c util.c
 )
 
+# Tell CMake the capabilities we need from the compiler (like C version)
+target_compile_features(${APP_NAME} PRIVATE c_std_99)
+
 # Make sure it's built in the top level directory
 set_target_properties(
   ${APP_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
-
-# Tell CMake the capabilities we need from the compiler (like C version)
-target_compile_features(${APP_NAME} PRIVATE c_std_99)
-add_compile_options("-Wall" "-Wextra" "-Wdouble-promotion" "-Wno-unused-parameter")
 
 # Tell CMake where else to look for includes (such as config.h)
 target_include_directories(${APP_NAME} PRIVATE "${PROJECT_BINARY_DIR}")

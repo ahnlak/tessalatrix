@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include "SDL.h"
 
 
@@ -32,9 +33,6 @@
 /* Module variables. */
 
 static trix_config_st  m_config[CONF_MAX];
-
-static trix_loglevel_t m_log_level;
-static char            m_log_fname[TRIX_PATH_MAX+1];
 
 
 /*
