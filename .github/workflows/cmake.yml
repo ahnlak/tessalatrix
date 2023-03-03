@@ -24,19 +24,16 @@ jobs:
             cmake-prefix:
             make-prefix:
             apt-packages:   libsdl2-dev libsdl2-image-dev
-            cmake-args:
           - os:             ubuntu-20.04
             name:           Emscripten
             cmake-prefix:   emcmake
             make-prefix:    emmake
             apt-packages:   
-            cmake-args:
           - os:             windows-latest
             name:           Visual Studio
             cmake-prefix:
             make-prefix:
             apt-packages:
-            cmake-args:     -DSDL2_DIR=$GITHUB_WORKSPACE/vs/sdl
 
     runs-on: ${{matrix.os}}
 
@@ -66,12 +63,15 @@ jobs:
 
     # Configure cmake
     - name: Configure CMake
-      shell: bash
-      run:  ${{matrix.cmake-prefix}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{matrix.cmake-args}}
+      - if: runner.os == 'Windows'
+        name: Windows
+        run:  ${{matrix.cmake-prefix}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DSDL2_DIR=${{github.workspace}}/vs/sdl
+      - if: runner.os != 'Windows'
+        name: Non-Windows
+        run:  ${{matrix.cmake-prefix}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     # Run the build
     - name: Build
-      shell: bash
       run:  cd ${{github.workspace}}/build && ${{matrix.make-prefix}} make
 
     # On releases, get cmake to build the packages
