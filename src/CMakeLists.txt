@@ -106,7 +106,9 @@ elseif(WIN32)
     DESTINATION .
   )
 
-else()
+endif()
+
+if(NOT EMSCRIPTEN)
 
   install(DIRECTORY "${PROJECT_BINARY_DIR}/assets" DESTINATION . FILES_MATCHING PATTERN "*.png")
 
