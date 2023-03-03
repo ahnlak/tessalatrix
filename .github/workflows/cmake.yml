@@ -61,14 +61,14 @@ jobs:
         version: ${{env.EM_VERSION}}
         actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
 
-    # Configure cmake
-    - name: Configure CMake
-      - if: runner.os == 'Windows'
-        name: Windows
-        run:  ${{matrix.cmake-prefix}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DSDL2_DIR=${{github.workspace}}/vs/sdl
-      - if: runner.os != 'Windows'
-        name: Non-Windows
-        run:  ${{matrix.cmake-prefix}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+    # Configure cmake, either for Windows or not (yes, it's ugly)
+    - name: Configure CMake (Windows)
+      if: runner.os == 'Windows'
+      run:  ${{matrix.cmake-prefix}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DSDL2_DIR=${{github.workspace}}/vs/sdl
+
+    - name: Configure CMake (Non-Windows)
+      if: runner.os != 'Windows'
+      run:  ${{matrix.cmake-prefix}} cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     # Run the build
     - name: Build
