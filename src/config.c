@@ -122,6 +122,7 @@ bool config_load( int p_argc, char **p_argv )
   config_set_int( CONF_LOG_LEVEL, ERROR, false );
   config_set_string( CONF_LOG_FILENAME, "tessalatrix.log", false );
   config_set_int( CONF_RESOLUTION, 0, true );
+  config_set_string( CONF_PLAYERNAME, "Player1", false );
 
   /* Load up any configuration file we can find. */
   /* __RETURN__ */

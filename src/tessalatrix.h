@@ -65,7 +65,7 @@ typedef enum
 typedef enum
 {
   CONF_LOG_LEVEL, CONF_LOG_FILENAME,
-  CONF_RESOLUTION,
+  CONF_RESOLUTION, CONF_PLAYERNAME,
   CONF_MAX
 } trix_config_t;
 
@@ -211,6 +211,7 @@ void          text_init( void );
 void          text_draw( uint_fast8_t, uint_fast8_t, const char *, ... );
 void          text_draw_to( uint_fast8_t, uint_fast8_t, const char *, ... );
 void          text_draw_around( uint_fast8_t, uint_fast8_t, const char *, ... );
+SDL_Rect      text_measure( const char *, ... );
 void          text_fini( void );
 
 const char   *util_app_name( void );
