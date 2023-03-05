@@ -218,7 +218,7 @@ static void config_fetch( void )
 
   /* All done! */
   fclose( l_fileptr );
-  return true;
+  return;
 }
 
 
