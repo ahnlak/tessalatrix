@@ -282,6 +282,7 @@ trix_engine_t over_update( void )
         {
           strcpy( m_player_name, "unknown" );
         }
+        config_save_string( CONF_PLAYERNAME, m_player_name );
         hiscore_save( m_gamestate->mode, m_gamestate->score,
                       m_gamestate->lines, m_player_name );
       }

@@ -53,6 +53,7 @@
 #define   TRIX_ASSET_HST_SPRITES      "hst-sprites"
 
 #define   TRIX_HISCORE_FILENAME       "hst.dat"
+#define   TRIX_CONFIG_FILENAME        "tessalatrix.cfg"
 
 
 /* Enums. */
@@ -64,7 +65,7 @@ typedef enum
 
 typedef enum
 {
-  CONF_LOG_LEVEL, CONF_LOG_FILENAME,
+  CONF_LOG_LEVEL=1, CONF_LOG_FILENAME,
   CONF_RESOLUTION, CONF_PLAYERNAME,
   CONF_MAX
 } trix_config_t;
@@ -147,10 +148,10 @@ typedef struct {
 /* Prototypes. */
 
 bool          config_load( int, char ** );
-bool          config_save( void );
 int32_t       config_get_int( trix_config_t );
 double        config_get_float( trix_config_t );
 const char   *config_get_string( trix_config_t );
+bool          config_save_string( trix_config_t, const char * );
 
 bool          display_init( void );
 void          display_fini( void );

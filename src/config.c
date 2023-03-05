@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include "SDL.h"
 
@@ -98,6 +99,130 @@ static void config_set_string( trix_config_t p_item, const char *p_string, bool 
 
 
 /*
+ * config_save - writes out the entire configuration file, for all items which
+ *               are flagged as persistent.
+ */
+
+static bool config_save( void )
+{
+  uint_fast8_t    l_index;
+  FILE           *l_fileptr;
+
+  /* This is a relatively simple operation, then! */
+  l_fileptr = fopen( TRIX_CONFIG_FILENAME, "w" );
+  if ( l_fileptr == NULL )
+  {
+    return false;
+  }
+
+  /* Work through the config array; only write out persistent ones. */
+  for ( l_index = 0; l_index < CONF_MAX; l_index++ )
+  {
+    if ( m_config[l_index].persistent )
+    {
+      if ( m_config[l_index].type_int )
+      {
+        fprintf( l_fileptr, "%d:int:%d\n", l_index, m_config[l_index].value.intnum );
+      }
+      if ( m_config[l_index].type_float )
+      {
+        fprintf( l_fileptr, "%d:float:%f\n", l_index, m_config[l_index].value.floatnum );
+      }
+      if ( m_config[l_index].type_string )
+      {
+        fprintf( l_fileptr, "%d:string:%s\n", l_index, m_config[l_index].value.string );
+      }      
+    }
+  }
+
+  /* All done! */
+  fclose( l_fileptr );
+  return true;
+}
+
+
+/*
+ * config_fetch - fetches any configuration stored in our config file.
+ *                entries are skipped, and do not interrupt parsing.
+ */
+
+static void config_fetch( void )
+{
+  char            l_buffer[TRIX_PATH_MAX+1];
+  int_fast8_t     l_item;
+  FILE           *l_fileptr;
+  char           *l_charptr;
+
+  /* This is a relatively simple operation, then! */
+  l_fileptr = fopen( TRIX_CONFIG_FILENAME, "r" );
+  if ( l_fileptr == NULL )
+  {
+    return;
+  }
+
+  /* Work through the file one line at a time */
+  while ( !feof( l_fileptr ) )
+  {
+    /* Fetch the next line. */
+    if ( fgets( l_buffer, TRIX_PATH_MAX, l_fileptr ) == NULL )
+    {
+      break;
+    }
+
+    /* Try to extract the item number, from the start of the line. */
+    l_charptr = strtok( l_buffer, ":" );
+    if ( l_charptr == NULL )
+    {
+      continue;
+    }
+    l_item = atoi( l_charptr );
+    if ( ( l_item == 0 ) || ( l_item >= CONF_MAX ) )
+    {
+      continue;
+    }
+
+    /* Good good. Next token is the type. */
+    l_charptr = strtok( NULL, ":" );
+    if ( l_charptr == NULL )
+    {
+      continue;
+    }
+
+    /* The rest of the processing depends, a bit, on the type. */
+    if ( strcmp( l_charptr, "int" ) == 0 )
+    {
+      l_charptr = strtok( NULL, "\n" );
+      m_config[l_item].persistent = true;
+      m_config[l_item].type_int = true;
+      m_config[l_item].type_float = m_config[l_item].type_string = false;
+      m_config[l_item].value.intnum = atoi( l_charptr );
+    }
+    if ( strcmp( l_charptr, "float" ) == 0 )
+    {
+      l_charptr = strtok( NULL, "\n" );
+      m_config[l_item].persistent = true;
+      m_config[l_item].type_float = true;
+      m_config[l_item].type_int = m_config[l_item].type_string = false;
+      m_config[l_item].value.floatnum = atof( l_charptr );
+    }
+    if ( strcmp( l_charptr, "string" ) == 0 )
+    {
+      l_charptr = strtok( NULL, "\n" );
+      m_config[l_item].persistent = true;
+      m_config[l_item].type_string = true;
+      m_config[l_item].type_int = m_config[l_item].type_float = false;
+      strncpy( m_config[l_item].value.string, l_charptr, TRIX_PATH_MAX );
+      m_config[l_item].value.string[TRIX_PATH_MAX] = '\0';
+    }
+  }
+
+  /* All done! */
+  fclose( l_fileptr );
+  return true;
+}
+
+
+/*
  * Public functions; declared in tessalatrix.h and used throughout the game.
  */
 
@@ -122,10 +247,10 @@ bool config_load( int p_argc, char **p_argv )
   config_set_int( CONF_LOG_LEVEL, ERROR, false );
   config_set_string( CONF_LOG_FILENAME, "tessalatrix.log", false );
   config_set_int( CONF_RESOLUTION, 0, true );
-  config_set_string( CONF_PLAYERNAME, "Player1", false );
+  config_set_string( CONF_PLAYERNAME, "Player1", true );
 
   /* Load up any configuration file we can find. */
-  /* __RETURN__ */
+  config_fetch();
 
   /* And lastly, check for command line overrides / commands. */
   optparse_init( &l_opt_struct, p_argv );
@@ -232,5 +357,27 @@ const char *config_get_string( trix_config_t p_item )
   /* Default to null on failure. */
   return NULL;
 }
+
+
+/*
+ * config_save_* - saves the specific configuration entry; these are used for
+ *                 user-configurable settings, and will trigger the re-writing
+ *                 of the configuration file every time.
+ */
+
+bool config_save_string( trix_config_t p_item, const char *p_value )
+{
+  /* Copy the new value in then. */
+  m_config[p_item].type_int = m_config[p_item].type_float = false;
+  m_config[p_item].type_string = true;
+  m_config[p_item].persistent = true;
+
+  strncpy( m_config[p_item].value.string, p_value, TRIX_PATH_MAX );
+  m_config[p_item].value.string[TRIX_PATH_MAX] = '\0';
+
+  /* Then just write it out. */
+  return config_save();
+}
+
 
 /* End of file config.c */
