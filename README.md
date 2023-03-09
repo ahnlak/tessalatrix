@@ -19,3 +19,14 @@ of writing, automated builds target Linux, Windows and Web.
 As always, this is all released under the MIT License.
 
 Share And Enjoy
+
+## Building
+
+The easiest way to get a playable copy of the game is to head to the 
+[Releases](/releases) page - each release should have automatically built
+zip / tar files for all supported targets. Simply grab the file and unzip it
+into a suitable directory, and run the `tessalatrix(.exe)` file within.
+
+If you want to build from source, refer to [BUILDING.md](/BUILDING.md) but be
+aware that this only talks in detail about Linux-based builds because that's
+my primary development environment.
